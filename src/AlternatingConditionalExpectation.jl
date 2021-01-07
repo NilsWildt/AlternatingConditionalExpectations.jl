@@ -11,8 +11,7 @@ module AlternatingConditionalExpectation
     using LinearAlgebra
     using StaticArrays
     using StatsPlots
-    using LaTeXStrings
-    using Revise
+    # using Revise
     using Statistics
     using BenchmarkTools
     using Test
@@ -23,6 +22,7 @@ module AlternatingConditionalExpectation
     using LaTeXStrings
     using StaticArrays
     using HybridArrays
+ 
     # using ProgressMeter
     include("utils.jl")
         # Generate Test dataset which is correlated. 
