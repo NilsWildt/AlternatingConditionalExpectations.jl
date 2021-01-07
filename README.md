@@ -1,21 +1,19 @@
-# AlternatingConditionalExpectation
+# AlternatingConditionalExpectation.jl
 
-This code base is using the Julia Language and [DrWatson](https://juliadynamics.github.io/DrWatson.jl/stable/)
-to make a reproducible scientific project named
-> AlternatingConditionalExpectation
-
-It is authored by nildt.
-
-To (locally) reproduce this project, do the following:
-
-0. Download this code base. Notice that raw data are typically not included in the
-   git-history and may need to be downloaded independently.
-1. Open a Julia console and do:
-   ```
-   julia> using Pkg
-   julia> Pkg.activate("path/to/this/project")
-   julia> Pkg.instantiate()
-   ```
-
-This will install all necessary packages for you to be able to run the scripts and
-everything should work out of the box.
+<!-- Tidyverse lifecycle badges, see https://www.tidyverse.org/lifecycle/ Uncomment or delete as needed. -->
+![lifecycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)<!--
+![lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)
+![lifecycle](https://img.shields.io/badge/lifecycle-stable-green.svg)
+![lifecycle](https://img.shields.io/badge/lifecycle-retired-orange.svg)
+![lifecycle](https://img.shields.io/badge/lifecycle-archived-red.svg)
+![lifecycle](https://img.shields.io/badge/lifecycle-dormant-blue.svg) -->
+[![build](https://github.com/nildt/AlternatingConditionalExpectation.jl/workflows/CI/badge.svg)](https://github.com/nildt/AlternatingConditionalExpectation.jl/actions?query=workflow%3ACI)
+<!-- travis-ci.com badge, uncomment or delete as needed, depending on whether you are using that service. -->
+<!-- [![Build Status](https://travis-ci.com/nildt/AlternatingConditionalExpectation.jl.svg?branch=master)](https://travis-ci.com/nildt/AlternatingConditionalExpectation.jl) -->
+<!-- Coverage badge on codecov.io, which is used by default. -->
+[![codecov.io](http://codecov.io/github/nildt/AlternatingConditionalExpectation.jl/coverage.svg?branch=master)](http://codecov.io/github/nildt/AlternatingConditionalExpectation.jl?branch=master)
+<!-- Documentation -- uncomment or delete as needed -->
+<!--
+[![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://nildt.github.io/AlternatingConditionalExpectation.jl/stable)
+[![Documentation](https://img.shields.io/badge/docs-master-blue.svg)](https://nildt.github.io/AlternatingConditionalExpectation.jl/dev)
+-->

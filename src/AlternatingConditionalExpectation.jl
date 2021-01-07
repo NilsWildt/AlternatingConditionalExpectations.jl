@@ -1,3 +1,6 @@
+"""
+Placeholder for a short summary about AlternatingConditionalExpectation.
+"""
 module AlternatingConditionalExpectation
     abstract type ACE end
     abstract type Smoother end
