@@ -133,10 +133,10 @@ end
         end
         err_old = err_new
 
-        Θ_1 = Y# cond_exp(Y, Φ_x, myace, sIy, bsIy) # E_x(Phi(x)|Y)
+        Θ_1 =  cond_exp(Y, Φ_x, myace, sIy, bsIy) # E_x(Phi(x)|Y)
         Θ_y =  stoch_normalize(Θ_1) # Θ_1 .- mean(Θ_1) #
         # Θ_y  = Θ_1
-        err_new = MSE(Φ_x, Θ_y)
+        err_new = unexplained_variance(Φ_x, Θ_y)
         abserr = abs(err_new - err_old) 
                 # println("In iter $i we get an error of $abserr to the loop before.")
                 # printfmt("In Iteration $i we get an error of {:.9f}",abs(err_new - err_old))
