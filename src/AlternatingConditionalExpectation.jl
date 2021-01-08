@@ -190,8 +190,8 @@ end
                 ylim = (-2.5, 2.5),
                 markerstrokewidth = 0
             )
-    # p2 = plot!(p2, sort(X), sort(X).^2)
-    # plot!(p2, sort(X), sort(X))
+    p2 = plot!(p2, sort(X), sort(X).^2)
+    plot!(p2, sort(X), sort(X))
     # X, Y = sort_two_arrays(X, Y)
     # p3Y, p3Θ_y = sort_two_arrays(Y, Θ_y)
     p3 = StatsPlots.scatter(
@@ -207,10 +207,10 @@ end
                 # ylim = (-2, 2),
                 markerstrokewidth = 0
             )
-    # p3 =  plot!(p3, sort(Y), log.(sort(Y)))
+    p3 =  plot!(p3, sort(Y), log.(sort(Y)))
     # plot!(p3, sort(Y), (sort(Y).^(1 / 3)))
 
-    # plot!(p3, sort(Y), abs.(log.(sort(Y))).^(1 / 3))
+    plot!(p3, sort(Y), abs.(log.(sort(Y))).^(1 / 3))
     # X, Φ_x
     p4 = StatsPlots.scatter(
                 Φ_x, Θ_y,
