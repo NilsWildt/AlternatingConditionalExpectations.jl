@@ -173,8 +173,8 @@ end
                 dpi = alldpi,
                 cbar = false,
                 leg = false,
-                # xlim = (-2.5, 2.5),
-                # ylim = (0, 80),
+                xlim = (-2.5, 2.5),
+                ylim = (0, 80),
                 markerstrokewidth = 0
             )
     p2 = StatsPlots.scatter(
@@ -203,8 +203,8 @@ end
                 dpi = alldpi,
                 cbar = false,
                 leg = false,
-                # xlim = (0, 80),
-                # ylim = (-2, 2),
+                xlim = (0, 80),
+                ylim = (-2, 2),
                 markerstrokewidth = 0
             )
     p3 =  plot!(p3, sort(Y), log.(sort(Y)))
@@ -221,8 +221,8 @@ end
                 dpi = alldpi,
                 cbar = false,
                 leg = false,
-                # xlim = (-3, 3),
-                # ylim = (-2.2, 2.5),
+                xlim = (-3, 3),
+                ylim = (-2.2, 2.5),
                 markerstrokewidth = 0
             )
         # scatter!(X.^3, log.(Y), m = (:dot, 1))
