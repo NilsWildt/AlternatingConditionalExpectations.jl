@@ -28,7 +28,7 @@ module AlternatingConditionalExpectation
         # Generate Test dataset which is correlated. 
         # SEED = Int64();
     include("Smoother.jl")
-    struct Acerun{T <: AbstractArray}
+mutable struct Acerun{T <: AbstractArray}
     "X data"
     X::T
     "Y data"
@@ -73,6 +73,7 @@ end
     ub = 5.0
        dims = (N, 1)
   return abs(ub - lb) .* (rand(rng,  Float64, dims)) .+ lb
+    end
 
   
 # Generate a Nx3 dataset: Y,X1,X2
