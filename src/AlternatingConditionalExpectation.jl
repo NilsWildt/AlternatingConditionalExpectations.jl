@@ -28,11 +28,11 @@ module AlternatingConditionalExpectation
         # Generate Test dataset which is correlated. 
         # SEED = Int64();
     include("Smoother.jl")
-mutable struct Acerun{T <: AbstractArray}
+struct Acerun
     "X data"
-    X::T
+    X::SMatrix
     "Y data"
-    Y::T
+    Y::SArray
     "Smoothing function"
     smoother::Smoother
     "Error bound"
@@ -43,7 +43,7 @@ mutable struct Acerun{T <: AbstractArray}
     itermax_outer::Int64
 end
 
-Acerun(X::T, Y::T, smoother::Smoother, errorbound::Float64 = 1E-4,  itermax_inner::Int64 = 10, itermax_outer::Int64 = 100) where T = Acerun{T}(X, Y, smoother, errorbound, itermax_inner, itermax_outer)
+Acerun(X::SMatrix, Y::SArray, smoother::Smoother, errorbound::Float64 = 1E-4,  itermax_inner::Int64 = 10, itermax_outer::Int64 = 100)  = Acerun(X, Y, smoother, errorbound, itermax_inner, itermax_outer)
 
 function get_sortidx(X::StaticVector)
     N = length(X)
@@ -91,7 +91,7 @@ end
     X2 = get_uni(N)
     X3 = get_uni(N)
     Y = X1.^2 .+ sin.(X2).+ σ_noise .* eps_err
-    return SVector{N,Float64}(Y), SArray{N,3,Float64}([X1,X2,X3])
+    return SVector{N,Float64}(Y), SArray{(N,3),Float64}([X1 X2 X3])
 end
 
   @inline  function cond_exp(X::StaticVector, Y::StaticVector,  myace::Acerun, sindx::AbstractArray, bindx::AbstractArray) 

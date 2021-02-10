@@ -1,3 +1,4 @@
+##
 using DrWatson
 @quickactivate "AlternatingConditionalExpectation"
 include(srcdir("Kernelregression", "Kernelregression.jl"))
@@ -7,19 +8,62 @@ include(srcdir("benchmark_functions.jl"))
 using Statistics
 using Pkg
 using Test
-Pkg.add(url="git@github.com:NilsWildt/AlternatingConditionalExpectation.jl.git")
+# Pkg.add(url="git@github.com:NilsWildt/AlternatingConditionalExpectation.jl.git")
 using AlternatingConditionalExpectation
 using PyPlot
 using Random
 pygui(true)
-# ENV["JULIA_DEBUG"] = "all"
-# import Main.AlternatingConditionalExpectation
+ENV["JULIA_DEBUG"] = "all"
+import Main.AlternatingConditionalExpectation
+
+##
+ function get_uni(N)
+            rng = MersenneTwister()
+    lb = 0.0
+    ub = 5.0
+       dims = (N, 1)
+  return abs(ub - lb) .* (rand(rng,  Float64, dims)) .+ lb
+    end
+    function generate_multivariate_data(N = 200, σ_x1 = 1.0, σ_x2 = 1.0, σ_noise = 1.0, vargs...)
+    rng = []
+    if length(vargs) > 0
+        rng = MersenneTwister(vargs[1])
+    else
+        rng = MersenneTwister()
+    end
+
+    eps_err = randn(rng, Float64, (N,))
+    X1 =get_uni(N)
+    X2 = get_uni(N)
+    X3 = get_uni(N)
+    Y = X1.^2 .+ sin.(X2).+ σ_noise .* eps_err
+    return SVector{N,Float64}(Y), SArray{Tuple{N,N,N},Float64}([X1,X2,X3])
+end
+
+
+
+
+     Y,X  = generate_multivariate_data(500)
+
+
+##
+
+
+
+
+
+
+
+
+
+
+
 
 @testset "All tests:" begin
 
 
     @testset "Module ACE (multivariate)" begin
-     Y,X1,X2,X3  = AlternatingConditionalExpectation.generate_multivariate_data(500)
+     Y,X  = AlternatingConditionalExpectation.generate_multivariate_data(500)
     end
 
 
