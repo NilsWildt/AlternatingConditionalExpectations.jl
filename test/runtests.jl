@@ -10,6 +10,7 @@ using Test
 Pkg.add(url="git@github.com:NilsWildt/AlternatingConditionalExpectation.jl.git")
 using AlternatingConditionalExpectation
 using PyPlot
+using Random
 pygui(true)
 # ENV["JULIA_DEBUG"] = "all"
 # import Main.AlternatingConditionalExpectation
