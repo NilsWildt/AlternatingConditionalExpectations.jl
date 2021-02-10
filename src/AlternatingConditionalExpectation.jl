@@ -91,7 +91,7 @@ end
     X2 = get_uni(N)
     X3 = get_uni(N)
     Y = X1.^2 .+ sin.(X2).+ σ_noise .* eps_err
-    return SVector{N,Float64}(Y), SVector{N,Float64}(X1) ,SVector{N,Float64}(X2) ,SVector{N,Float64}(X3) 
+    return SVector{N,Float64}(Y), SArray{N,3,Float64}([X1,X2,X3])
 end
 
   @inline  function cond_exp(X::StaticVector, Y::StaticVector,  myace::Acerun, sindx::AbstractArray, bindx::AbstractArray) 
