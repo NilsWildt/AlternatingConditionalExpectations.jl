@@ -69,6 +69,7 @@ end
 
 
     function get_uni(N)
+            rng = MersenneTwister()
     lb = 0.0
     ub = 5.0
        dims = (N, 1)
