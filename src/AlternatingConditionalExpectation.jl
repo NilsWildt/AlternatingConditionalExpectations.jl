@@ -118,21 +118,29 @@ end
     return (X  .- tmpmean) ./ std(X; corrected = true, mean = tmpmean)
 end
 
-    
+  
 function ACE_multivariate(myace::Acerun)
     @info "Startin multivariate ACE, the predictor variables have a size of $(size(myace.X))"
     # Normalize Mean an Variance, save the transformation
-    X = myace.X
-    Nx = length(X)
-    Y = myace.Y
+    X = myace.X # Predictor variables
+    Nx,dimX = size(X)
+    Y = myace.Y # Response VEctor
 
-    sIx, bsIx = get_sortidx(X)
+    # Sortindex of all predcitors
+sIx = Array{Int64}(undef, Nx,3)
+bsIx = Array{Int64}(undef, Nx,3)
+    for i in 1:dimX
+        sIx[:,i], bsIx[:,i] = get_sortidx(X[:,i])
+    end
+    # SOrt response variables
     sIy, bsIy = get_sortidx(Y)
+
+
         # Preallocate
     Θ_y = stoch_normalize(Y)
     Θ_1 = Θ_y
-    Φ_1 = MVector{Nx,Float64}(zeros(Float64, Nx))
-    Φ_x = MVector{Nx,Float64}(zeros(Float64, Nx))
+    Φ_1 =  @SMatrix zeros(Float64,Nx,3)
+    Φ_x = @SMatrix zeros(Float64,Nx,3)
 
     err_old = Inf64
     err_new = unexplained_variance(X, Y)
