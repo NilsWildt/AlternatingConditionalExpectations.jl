@@ -68,6 +68,13 @@ end
 end
 
 
+    function get_uni(N)
+    lb = 0.0
+    ub = 5.0
+       dims = (N, 1)
+  return abs(ub - lb) .* (rand(rng,  Float64, dims)) .+ lb
+
+  
 # Generate a Nx3 dataset: Y,X1,X2
     function generate_multivariate_data(N = 200, σ_x1 = 1.0, σ_x2 = 1.0, σ_noise = 1.0, vargs...)
     rng = []
@@ -76,11 +83,6 @@ end
     else
         rng = MersenneTwister()
     end
-    function get_uni(N)
-    lb = 0.0
-    ub = 5.0
-       dims = (N, 1)
-  return abs(ub - lb) .* (rand(rng,  Float64, dims)) .+ lb
 
     eps_err = randn(rng, Float64, (N,))
     X1 =get_uni(N)

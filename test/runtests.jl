@@ -7,6 +7,7 @@ include(srcdir("benchmark_functions.jl"))
 using Statistics
 using Pkg
 using Test
+Pkg.add(url="git@github.com:NilsWildt/AlternatingConditionalExpectation.jl.git")
 using AlternatingConditionalExpectation
 using PyPlot
 pygui(true)
@@ -17,15 +18,7 @@ pygui(true)
 
 
     @testset "Module ACE (multivariate)" begin
-        X, Y = AlternatingConditionalExpectation.generate_bivariate_data(200, 1, 1234) # Set seed
-        @test length(X) == 200
-        @test isapprox(std(X), 1.0, atol = 1e-1)
-
-        X = rand(1000, )
-        Xout = AlternatingConditionalExpectation.stoch_normalize(X)
-        @test mean(X) != mean(Xout)
-        @test isapprox(mean(Xout), 0, atol = 1e-12) 
-        @test isapprox(var(Xout), 1)
+     Y,X1,X2,X3  = AlternatingConditionalExpectation.generate_multivariate_data(500)
     end
 
 
