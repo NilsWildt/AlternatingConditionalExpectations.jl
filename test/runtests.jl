@@ -1,5 +1,5 @@
 using DrWatson
-# @quickactivate "AlternatingConditionalExpectation"
+@quickactivate "AlternatingConditionalExpectation"
 include(srcdir("Kernelregression", "Kernelregression.jl"))
 using .Kernelregression
 include(srcdir("utils.jl"))
@@ -8,13 +8,31 @@ using Statistics
 using Pkg
 using Test
 using AlternatingConditionalExpectation
+using PyPlot
+pygui(true)
 # ENV["JULIA_DEBUG"] = "all"
-
+# import Main.AlternatingConditionalExpectation
 
 @testset "All tests:" begin
 
-    @testset "utils.jl" begin
 
+    @testset "Module ACE (multivariate)" begin
+        X, Y = AlternatingConditionalExpectation.generate_bivariate_data(200, 1, 1234) # Set seed
+        @test length(X) == 200
+        @test isapprox(std(X), 1.0, atol = 1e-1)
+
+        X = rand(1000, )
+        Xout = AlternatingConditionalExpectation.stoch_normalize(X)
+        @test mean(X) != mean(Xout)
+        @test isapprox(mean(Xout), 0, atol = 1e-12) 
+        @test isapprox(var(Xout), 1)
+    end
+
+
+
+
+
+    @testset "utils.jl" begin
 # Inplace
         a = [1,5,2,8]
         b = [1,2,3,4]
