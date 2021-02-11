@@ -45,7 +45,7 @@ end
 
 Acerun(X::SMatrix, Y::SArray, smoother::Smoother, errorbound::Float64 = 1E-4,  itermax_inner::Int64 = 10, itermax_outer::Int64 = 100)  = Acerun(X, Y, smoother, errorbound, itermax_inner, itermax_outer)
 
-function get_sortidx(X::StaticVector)
+function get_sortidx(X::AbstractArray)
     N = length(X)
     sort_idx =  sortperm(X)
     sort_idx_back = zeros(Int64, N)
@@ -94,26 +94,26 @@ end
     return SVector{N,Float64}(Y), SArray{(N,3),Float64}([X1 X2 X3])
 end
 
-  @inline  function cond_exp(X::StaticVector, Y::StaticVector,  myace::Acerun, sindx::AbstractArray, bindx::AbstractArray) 
+  @inline  function cond_exp(X::AbstractArray, Y::AbstractArray,  myace::Acerun, sindx::AbstractArray, bindx::AbstractArray) 
     X = X[sindx]
     Y = Y[sindx]
     smoother = myace.smoother
     return SVector{length(X),Float64}(do_smoothing(X, Y, smoother)[bindx])
 end
 
- @inline function unexplained_variance(Φ_x::StaticVector, Θ_y::StaticVector)::Float64
+ @inline function unexplained_variance(Φ_x::AbstractArray, Θ_y::AbstractArray)::Float64
             # Please input already transformed variables
     err = mean((Θ_y .- Φ_x).^2) 
     err = err ./ var(Θ_y) # We don't care for scaling factors.
     return err
 end
 
-    @inline function MSE(X::StaticVector, Y::StaticVector)::Float64
+    @inline function MSE(X::AbstractArray, Y::AbstractArray)::Float64
     sum((Y .- X).^2) / length(X)
 end
 
 
-    @inline function stoch_normalize(X::StaticVector)::StaticVector
+    @inline function stoch_normalize(X::AbstractArray)::AbstractArray
     tmpmean = mean(X)
     return (X  .- tmpmean) ./ std(X; corrected = true, mean = tmpmean)
 end
