@@ -227,24 +227,33 @@ function ACE_bivariate(myace::Acerun)
 
     @inbounds while abserr > errorbound &&  i < itermax_outer #  || i < 5
         j = 0
-          Φ_x = 0. .*Φ_x # Set back to zero (fresh start versoin.)
+        #   Φ_x = 0. .*Φ_x # Set back to zero (fresh start versoin.)
         # Without, it's the restart version.
         while abserr > errorbound &&  j < itermax_inner 
             err_old = err_new
+            Φ_x_tmp = copy(Φ_x)
             Φ_1 = cond_exp(X, Θ_y.-Φ_x,  myace,  sIx, bsIx) # E_y(...)
             Φ_x =   stoch_normalize(Φ_1) #  Φ_1  .- mean(Φ_1) # normalize mean #   stoch_normalize(Φ_1)# stoch_normalize(Φ_1)
 
-            @show err_new = unexplained_variance(Φ_x, Θ_y)
+           err_new = unexplained_variance(Φ_x, Θ_y)
+
+           if err_new>err_old
+                Φ_x = Φ_x_tmp # Set back to value before.
+            end
+
             abserr = abs(err_new - err_old) 
             j = j + 1
             itercount_inner = itercount_inner + 1
         end
         err_old = err_new
-
+        Θ_y_tmp = copy(Θ_y)
         Θ_1 =  cond_exp(Y, Φ_x, myace, sIy, bsIy) # E_x(Phi(x)|Y)
         Θ_y =  stoch_normalize(Θ_1) # Θ_1 .- mean(Θ_1) #
         # Θ_y  = Θ_1
         err_new = unexplained_variance(Φ_x, Θ_y)
+        if err_new > err_old
+            Θ_y = Θ_y_tmp
+        end
         abserr = abs(err_new - err_old) 
                 # println("In iter $i we get an error of $abserr to the loop before.")
                 # printfmt("In Iteration $i we get an error of {:.9f}",abs(err_new - err_old))
