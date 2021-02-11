@@ -232,16 +232,17 @@ function ACE_bivariate(myace::Acerun)
         while abserr > errorbound # &&  j < itermax_inner 
             err_old = err_new
             Φ_x_tmp = copy(Φ_x)
-            Φ_1 = cond_exp(X, Θ_y - Φ_x,  myace,  sIx, bsIx) # E_y(...)
+            Φ_1 = cond_exp(X, Θ_y .- Φ_x,  myace,  sIx, bsIx) # E_y(...)
             Φ_x =     stoch_normalize(Φ_1) # Φ_1  .- mean(Φ_1) # normalize mean #   stoch_normalize(Φ_1)# stoch_normalize(Φ_1)
 
-           err_new = unexplained_variance(Φ_x, Θ_y)
+            @show err_new = unexplained_variance(Φ_x, Θ_y)
 
            if err_new>err_old
                 Φ_x = Φ_x_tmp # Set back to value before.
+                break
             end
 
-            abserr = abs(err_new - err_old) 
+           abserr = abs(err_new - err_old) 
             j = j + 1
             itercount_inner = itercount_inner + 1
         end
@@ -253,6 +254,7 @@ function ACE_bivariate(myace::Acerun)
         err_new = unexplained_variance(Φ_x, Θ_y)
         if err_new > err_old
             Θ_y = Θ_y_tmp
+            break
         end
         abserr = abs(err_new - err_old) 
                 # println("In iter $i we get an error of $abserr to the loop before.")
