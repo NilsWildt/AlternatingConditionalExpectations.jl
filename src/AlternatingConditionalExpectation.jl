@@ -200,7 +200,8 @@ end
 function ACE_bivariate(myace::Acerun)
     # Normalize Mean an Variance, save the transformation
     Nx = length(myace.X)
-    X = SArray{Nx,Float64}(myace.X)
+    
+    X = SVector{Nx,Float64}(myace.X)
     Y = myace.Y
 
     sIx, bsIx = get_sortidx(X)
