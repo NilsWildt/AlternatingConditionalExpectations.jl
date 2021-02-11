@@ -210,7 +210,7 @@ function ACE_bivariate(myace::Acerun)
     Θ_y = stoch_normalize(Y)
     Θ_1 = Θ_y
     Φ_1 = MVector{Nx,Float64}(zeros(Float64, Nx))
-    Φ_x = X # MVector{Nx,Float64}(zeros(Float64, Nx))
+    Φ_x =  MVector{Nx,Float64}(zeros(Float64, Nx))
 
     err_old = Inf64
     err_new = unexplained_variance(X, Y)
@@ -227,6 +227,7 @@ function ACE_bivariate(myace::Acerun)
 
     @inbounds while abserr > errorbound &&  i < itermax_outer #  || i < 5
         j = 0
+          Φ_x = 0. .*Φ_x # Set back to zero (fresh start versoin.)
         while abserr > errorbound &&  j < itermax_inner 
             err_old = err_new
             Φ_1 = cond_exp(Φ_x, Θ_y,  myace,  sIx, bsIx) # E_y(...)
