@@ -227,7 +227,7 @@ function ACE_bivariate(myace::Acerun)
 
     @inbounds while abserr > errorbound &&  i < itermax_outer #  || i < 5
         j = 0
-          Φ_x = 0. .*Φ_x # Set back to zero (fresh start versoin.)
+        #   Φ_x = 0. .*Φ_x # Set back to zero (fresh start versoin.)
         # Without, it's the restart version.
         while abserr > errorbound &&  j < itermax_inner 
             err_old = err_new
