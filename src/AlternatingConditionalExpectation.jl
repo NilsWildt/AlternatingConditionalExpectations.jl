@@ -118,18 +118,19 @@ end
     return (X  .- tmpmean) ./ std(X; corrected = true, mean = tmpmean)
 end
 
-  
+  # Multivariate ACE values
+  # Restart version
 function ACE_multivariate(myace::Acerun)
     @info "Startin multivariate ACE, the predictor variables have a size of $(size(myace.X))"
     # Normalize Mean an Variance, save the transformation
     X = myace.X # Predictor variables
-    Nx,dimX = size(X)
+    Nx,m_parameter = size(X)
     Y = myace.Y # Response VEctor
 
     # Sortindex of all predcitors
 sIx = Array{Int64}(undef, Nx,3)
 bsIx = Array{Int64}(undef, Nx,3)
-    for i in 1:dimX
+    for i in 1:m_parameter
         sIx[:,i], bsIx[:,i] = get_sortidx(X[:,i])
     end
     # SOrt response variables
@@ -139,8 +140,8 @@ bsIx = Array{Int64}(undef, Nx,3)
         # Preallocate
     Θ_y = stoch_normalize(Y)
     Θ_1 = Θ_y
-    Φ_1 =  @SMatrix zeros(Float64,Nx,3)
-    Φ_x = @SMatrix zeros(Float64,Nx,3)
+    Φ_1 = @SMatrix zeros(Float64,Nx,3)
+    Φ_x = @SMatrix zeros(Float64,Nx,3) # Start with zeros
 
     err_old = Inf64
     err_new = unexplained_variance(X, Y)
@@ -148,7 +149,7 @@ bsIx = Array{Int64}(undef, Nx,3)
     abserr = err_old
     errorbound =    myace.errorbound 
         
-    i = 0
+    i = 0 # Counter outer loop
     itermax_outer = myace.itermax_outer
     itermax_inner = myace.itermax_inner
 
@@ -156,17 +157,20 @@ bsIx = Array{Int64}(undef, Nx,3)
     itercount_outer = 0
 
     @inbounds while abserr > errorbound &&  i < itermax_outer #  || i < 5
-        j = 0
-        while abserr > errorbound &&  j < itermax_inner 
+        j = 0 # Counter inner loop
+        while abserr > errorbound &&  j < itermax_inner
+            j = j + 1 # Count immediately (as indexing starts at 1)
             err_old = err_new
-            Φ_1 = cond_exp(X, Θ_y,  myace,  sIx, bsIx) # E_y(...)
-            Φ_x =   stoch_normalize(Φ_1) #  Φ_1  .- mean(Φ_1) # normalize mean #   stoch_normalize(Φ_1)# stoch_normalize(Φ_1)
-
+            @inbounds @simd for k in 1:m_parameter 
+                Φ_1[:,k] = cond_exp(X, Θ_y,  myace,  sIx, bsIx) # E_y(...)
+                Φ_x[:,k] =   stoch_normalize(Φ_1[:,k]) #  Φ_1  .- mean(Φ_1) # normalize mean #   stoch_normalize(Φ_1)# stoch_normalize(Φ_1)
+            end
             err_new = unexplained_variance(Φ_x, Θ_y)
             abserr = abs(err_new - err_old) 
-            j = j + 1
             itercount_inner = itercount_inner + 1
         end
+        i += 1 # Count immediately (as indexing starts at 1)
+
         err_old = err_new
 
         Θ_1 =  cond_exp(Y, Φ_x, myace, sIy, bsIy) # E_x(Phi(x)|Y)
@@ -176,7 +180,6 @@ bsIx = Array{Int64}(undef, Nx,3)
         abserr = abs(err_new - err_old) 
                 # println("In iter $i we get an error of $abserr to the loop before.")
                 # printfmt("In Iteration $i we get an error of {:.9f}",abs(err_new - err_old))
-        i += 1
         # @info "ACE Loop:" itercount_outer
         itercount_outer = itercount_outer + 1
     end
@@ -196,8 +199,8 @@ end
 
 function ACE_bivariate(myace::Acerun)
     # Normalize Mean an Variance, save the transformation
-    X = myace.X
     Nx = length(X)
+    X = SArray{Nx,Float64}(myace.X)
     Y = myace.Y
 
     sIx, bsIx = get_sortidx(X)
