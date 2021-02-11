@@ -210,7 +210,7 @@ function ACE_bivariate(myace::Acerun)
     Θ_y = stoch_normalize(Y)
     Θ_1 = Θ_y
     Φ_1 = MVector{Nx,Float64}(zeros(Float64, Nx))
-    Φ_x = MVector{Nx,Float64}(zeros(Float64, Nx))
+    Φ_x = X # MVector{Nx,Float64}(zeros(Float64, Nx))
 
     err_old = Inf64
     err_new = unexplained_variance(X, Y)
@@ -229,7 +229,7 @@ function ACE_bivariate(myace::Acerun)
         j = 0
         while abserr > errorbound &&  j < itermax_inner 
             err_old = err_new
-            Φ_1 = cond_exp(X, Θ_y,  myace,  sIx, bsIx) # E_y(...)
+            Φ_1 = cond_exp(Φ_x, Θ_y,  myace,  sIx, bsIx) # E_y(...)
             Φ_x =   stoch_normalize(Φ_1) #  Φ_1  .- mean(Φ_1) # normalize mean #   stoch_normalize(Φ_1)# stoch_normalize(Φ_1)
 
             err_new = unexplained_variance(Φ_x, Θ_y)
@@ -335,7 +335,7 @@ end
     if length(vargs) >= 1
         e2 = string(round(abs((unexplained_variance(Φ_x, Θ_y)));digits = 2))
         mytit = join([vargs[1] , "1- e^2 = $e2 "])
-        l = @layout [a{0.03h}; grid(2, 2)]
+        l = @layout [a{0.03h}; StatsPlots.grid(2, 2)]
         title = plot(title = mytit, grid = false, showaxis = false, bottom_margin = -50Plots.px) 
         plot(title, p1, p2, p3, p4, layout = l,  size = 0.8 .* (1.6 * 800, 800))
     else
