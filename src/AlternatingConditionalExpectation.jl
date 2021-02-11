@@ -225,14 +225,14 @@ function ACE_bivariate(myace::Acerun)
     itercount_inner = 0
     itercount_outer = 0
 
-    @inbounds while abserr > errorbound &&  i < itermax_outer #  || i < 5
+    @inbounds while abserr > errorbound  #&&  i < itermax_outer #  || i < 5
         j = 0
         #   Φ_x = 0. .*Φ_x # Set back to zero (fresh start versoin.)
         # Without, it's the restart version.
-        while abserr > errorbound &&  j < itermax_inner 
+        while abserr > errorbound # &&  j < itermax_inner 
             err_old = err_new
             Φ_x_tmp = copy(Φ_x)
-            Φ_1 = cond_exp(X,Φ_x .- Θ_y,  myace,  sIx, bsIx) # E_y(...)
+            Φ_1 = cond_exp(X, Θ_y - Φ_x,  myace,  sIx, bsIx) # E_y(...)
             Φ_x =     stoch_normalize(Φ_1) # Φ_1  .- mean(Φ_1) # normalize mean #   stoch_normalize(Φ_1)# stoch_normalize(Φ_1)
 
            err_new = unexplained_variance(Φ_x, Θ_y)
