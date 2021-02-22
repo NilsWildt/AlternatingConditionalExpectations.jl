@@ -28,8 +28,6 @@ pairwise euclidean distance
 ```
 """ 
 function pDist2(X::AbstractArray, Y::AbstractArray)
-    Ly = size(Y, 1)
-    Lx = size(X, 1)
     D = sqrt(pDist2Squared(X, Y))
     return D
 end
@@ -48,7 +46,7 @@ function pDist2Squared(X::AbstractArray, Y::AbstractArray)
 end
 
 
-function kernel_dot(X::AbstractArray, Y::AbstractArray)
+@fastmath function kernel_dot(X::AbstractArray, Y::AbstractArray)
     dimY = size(Y)
     dimX = size(X)
     Lx = Int64(dimX[1])

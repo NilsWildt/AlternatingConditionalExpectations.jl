@@ -5,7 +5,8 @@ using Plots
 using StatsPlots
 using LaTeXStrings
 using Latexify
-
+using DrWatson
+include(srcdir("utils.jl"))
 abstract type BenchmarkFunction end
 
 
@@ -46,7 +47,7 @@ function benchmark_ace_plot(bf::BenchmarkFunction, vargs...)
                 markerstrokewidth = 0
             )
     p2 = StatsPlots.scatter(
-                X,Φ_x,
+               X,Φ_x,
                 xlabel = "X",
                 ylabel = L"\Phi(X)",
                 m = ([:circle], 2),
@@ -71,7 +72,7 @@ function benchmark_ace_plot(bf::BenchmarkFunction, vargs...)
         catch
             flabel = "undef"
         end
-       p2 =   plot!(p2, sort(X;dims = 1),f( sort(X;dims = 1)), label = flabel, legend = :best)
+       p2 =  Plots. plot!(p2, sort(X;dims = 1),f( sort(X;dims = 1)), label = flabel, legend = :best)
     end
 end
     # X, Y = sort_two_arrays(X, Y)
@@ -101,7 +102,7 @@ for (n,f) in  plot_fcs[2]
         catch
             flabel = "undef"
         end
-           plot!(p3, sort(Y;dims = 1), abs.(f.(sort(Y;dims = 1))).^(1 / 3), label = flabel, legend = :best)
+          Plots.plot!(p3, sort(Y;dims = 1), abs.(f.(sort(Y;dims = 1))).^(1 / 3), label = flabel, legend = :best)
     end
 end
     # plot!(p3, sort(Y), (sort(Y).^(1 / 3)))
@@ -120,13 +121,15 @@ end
                 ylim = plot_view_bounds[4][2],
                 markerstrokewidth = 0
             )
+        p5 = Plots.scatter(1:length(Benchmark.conv_err), Benchmark.conv_err)
+        
         # scatter!(X.^3, log.(Y), m = (:dot, 1))
     if length(vargs) >= 1
-        e2 = string(round(abs((unexplained_variance(Φ_x, Θ_y)));digits = 2))
-        mytit = join([vargs[1] , " e^2 = $e2 "])
-        l = @layout [a{0.03h}; grid(2, 2)]
-        title = plot(title = mytit, grid = false, showaxis = false, bottom_margin = -50Plots.px) 
-        plot(title, p1, p2, p3, p4, layout = l,  size = 0.8 .* (1.6 * 800, 800))
+        e2 = string(round(abs((ε²(Φ_x[Benchmark.sIx], Θ_y[Benchmark.sIy])));digits = 4))
+        mytit = join([vargs[1] , " ε² = $e2 "])
+        l = @layout [a{0.03h}; StatsPlots.grid(2, 2);b{0.2h}]
+        title = Plots.plot(title = mytit, grid = false, showaxis = false, bottom_margin = -50Plots.px) 
+       StatsPlots. plot(title, p1, p2, p3, p4,p5, layout = l,  size = 0.8 .* (1.6 * 1000, 1000))
     else
         l = @layout [a b; c d]
         plot(p1, p2, p3, p4, layout = l)
@@ -291,6 +294,13 @@ name::String
 scale_factors::AbstractArray
 Φ_x::AbstractArray
 Θ_y::AbstractArray
+sIx::AbstractArray
+sIy::AbstractArray
+bsIx::AbstractArray
+bsIy::AbstractArray
+conv_err::AbstractArray
+
+
 function f_b1(numSamples::Int64, numDim::Int64, samplingmethod::String, σ_x::Float64, σ_noise::Float64, use_seed::Bool, seed::Int64,scale_data::Bool, bounds::Tuple{Float64,Float64} = (0.0, 1.0))
 lb, ub = bounds
 X = get_sample(numSamples, numDim, samplingmethod, σ_x, use_seed, seed, bounds)
@@ -373,6 +383,12 @@ name::String
 scale_factors::AbstractArray
 Φ_x::AbstractArray
 Θ_y::AbstractArray
+sIx::AbstractArray
+sIy::AbstractArray
+bsIx::AbstractArray
+bsIy::AbstractArray
+conv_err::AbstractArray
+
 function f_b2(numSamples::Int64, numDim::Int64, samplingmethod::String, σ_x::Float64, σ_noise::Float64, use_seed::Bool, seed::Int64,scale_data::Bool, bounds::Tuple{Float64,Float64} = (0.0, 1.0))
      lb, ub = bounds
      X = get_sample(numSamples, numDim, samplingmethod, σ_x,use_seed, seed, bounds)
@@ -441,6 +457,12 @@ name::String
 scale_factors::AbstractArray
 Φ_x::AbstractArray
 Θ_y::AbstractArray
+sIx::AbstractArray
+sIy::AbstractArray
+bsIx::AbstractArray
+bsIy::AbstractArray
+conv_err::AbstractArray
+
 function f_b3(numSamples::Int64, numDim::Int64, samplingmethod::String, σ_x::Float64, σ_noise::Float64, use_seed::Bool, seed::Int64,scale_data::Bool, bounds::Tuple{Float64,Float64} = (0.0, 1.0))
         lb, ub = bounds
      X = get_sample(numSamples, numDim, samplingmethod, σ_x,use_seed, seed, bounds)
@@ -512,6 +534,12 @@ name::String
 scale_factors::AbstractArray
 Φ_x::AbstractArray
 Θ_y::AbstractArray
+sIx::AbstractArray
+sIy::AbstractArray
+bsIx::AbstractArray
+bsIy::AbstractArray
+conv_err::AbstractArray
+
 function f_b4(numSamples::Int64, numDim::Int64, samplingmethod::String, σ_x::Float64, σ_noise::Float64, use_seed::Bool, seed::Int64, scale_data::Bool,bounds::Tuple{Float64,Float64} = (0.0, 1.0))
      lb, ub = bounds
      X = get_sample(numSamples, numDim, samplingmethod, σ_x,use_seed, seed, bounds)
@@ -587,6 +615,11 @@ name::String
 scale_factors::AbstractArray
 Φ_x::AbstractArray
 Θ_y::AbstractArray
+sIx::AbstractArray
+sIy::AbstractArray
+bsIx::AbstractArray
+bsIy::AbstractArray
+conv_err::AbstractArray
 function f_toy(numSamples::Int64, numDim::Int64, samplingmethod::String, σ_x::Float64, σ_noise::Float64, use_seed::Bool, seed::Int64,scale_data::Bool, bounds::Tuple{Float64,Float64} = (0.0, 1.0))
      lb, ub = bounds
      X = get_sample(numSamples, numDim, samplingmethod, σ_x,use_seed, seed, bounds)

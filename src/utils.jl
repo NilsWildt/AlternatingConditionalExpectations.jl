@@ -86,3 +86,24 @@ end
 function logrange(start, ende, npoints)
     return  LinRange(10.0.^start, 10.0.^ende, npoints)
 end
+
+
+# # Copied from  https://github.com/JuliaLang/julia/issues/16273#issuecomment-541931902
+# function Base.sortperm(A::T; dims::Integer, rev::Bool = false) where T <: AbstractArray
+#     P = mapslices(x -> sortperm(x; rev = rev), A, dims = dims)
+#     if dims == 1
+#         for j = 1:size(P, 2)
+#             offset = (j - 1) * size(P, 1)
+#             for i = 1:size(P, 1)
+#                 P[i, j] += offset
+#             end
+#         end
+#     else # if dims == 2
+#         for j = 1:size(P, 2)
+#             for i = 1:size(P, 1)
+#                 P[i, j] = (P[i, j] - 1) * size(P, 1) + i
+#             end
+#         end
+#     end
+#     return P
+# end
