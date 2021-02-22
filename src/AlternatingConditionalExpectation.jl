@@ -299,7 +299,7 @@ function ACE_multivariate(myace::Acerun{T,S}) where {T,S <: AbstractArray}
             end
             e_new =  ε²(Θ_y, Φ_candidate)
             @debug "Inner loop" (e_old - e_new )  i j
-            push!(conv_err, e_new)
+            push!(conv_err, abs(e_old - e_new))
             j += 1
         end
         e_old = e_new;
@@ -309,7 +309,7 @@ function ACE_multivariate(myace::Acerun{T,S}) where {T,S <: AbstractArray}
         i += 1
         e_new =  ε²(Θ_candidate, Φ_x)
         @debug "outer loop" (e_old - e_new ) i j
-        push!(conv_err, e_new)
+        push!(conv_err, abs(e_old - e_new))
     end
 
 #   var_unexp = ε²(Φ_x, Θ_y)
