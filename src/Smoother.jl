@@ -519,7 +519,7 @@ end
 
 
 # In case, we gave it several smoothers, do them in this order every time
-function do_smoothing(x::Array{Float64}, y::Array{Float64}, smoothers::Array{Smoother})
+function do_smoothing(x::AbstractArray, y::AbstractArray, smoothers::Array{Smoother})
     for sm in smoothers::Vector{Smoother}
         y = do_smoothing(x, y, sm)
     end
