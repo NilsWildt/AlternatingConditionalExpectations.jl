@@ -23,7 +23,7 @@ function guess_parameters!(mysmoother::Smoother, N::Int64)
     end
 end
 
-@fastmath function do_smoothing(x::Array{Float64}, y::Array{Float64}, smoother::LAS)
+@fastmath function do_smoothing(x::T, y::T, smoother::LAS)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
     # Nx = length(x)
     Ny = length(y)
@@ -65,7 +65,7 @@ mutable struct LLSS <: Smoother
     end
 end
 
-function do_smoothing_old(x::Array{Float64}, y::Array{Float64}, smoother::LLSS)
+function do_smoothing_old(x::T, y::T, smoother::LLSS)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
     # if !presorted
         # x, y =   _sanitizeinput(x, y)
@@ -152,7 +152,7 @@ function do_smoothing_old(x::Array{Float64}, y::Array{Float64}, smoother::LLSS)
     return  SArray{Tuple{Nx}}(LLSS_values)
 end
 
-@fastmath function do_smoothing(x::Array{Float64}, y::Array{Float64}, smoother::LLSS)
+@fastmath function do_smoothing(x::T, y::T, smoother::LLSS)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
     Ny = length(y)
     LLSS_values =  zeros(Float64, Ny)
@@ -183,7 +183,7 @@ end
 
 
 # Smoothing in the smoother.k*2+1 box but calculating abs(y-smoothedvals) plus do LOOCV.
-function loocv(x::Array{Float64}, y::Array{Float64}, smoother::LLSS)
+function loocv(x::T, y::T, smoother::LLSS)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
     # if !presorted
         # x, y =   _sanitizeinput(x, y)
@@ -217,7 +217,7 @@ mutable struct LLSSb <: Smoother
 end
 
 
-function do_smoothing(x::Array{Float64}, y::Array{Float64}, smoother::LLSSb)
+function do_smoothing(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
  
     # if !presorted
@@ -244,7 +244,7 @@ function do_smoothing(x::Array{Float64}, y::Array{Float64}, smoother::LLSSb)
 end
 
 
-function do_smoothing_slow(x::Array{Float64}, y::Array{Float64}, smoother::LLSSb)
+function do_smoothing_slow(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
  
     # if !presorted
@@ -266,7 +266,7 @@ function do_smoothing_slow(x::Array{Float64}, y::Array{Float64}, smoother::LLSSb
 end
 
 
-function do_smoothing_updating_bug(x::Array{Float64}, y::Array{Float64}, smoother::LLSSb)
+function do_smoothing_updating_bug(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
     Ny = length(y)
     LLSSbvals = @MVector zeros(Float64, Ny)
@@ -365,7 +365,7 @@ mutable struct Kernelsmooth <: Smoother
 end
 
 
-function do_smoothing(x::Array{Float64}, y::Array{Float64}, smoother::Kernelsmooth)
+function do_smoothing(x::T, y::T, smoother::Kernelsmooth)::T where {T <: AbstractArray{Float64}}
     # x, y =   _sanitizeinput(x, y)
     x =  Array{Float64,1}(x)
     y =  Array{Float64,1}(y)
@@ -393,7 +393,7 @@ mutable struct NWKernelsmooth <: Smoother
     smoothk::Kernel
 end
 
-function do_smoothing(x::Array{Float64}, y::Array{Float64}, smoother::NWKernelsmooth)
+function do_smoothing(x::T, y::T, smoother::NWKernelsmooth)::T where {T <: AbstractArray{Float64}}
     # x, y =   _sanitizeinput(x, y)
     Nx = length(x)
     Ny = length(y)
@@ -438,7 +438,7 @@ mutable struct FRSS <: Smoother
 end
 
 
-@fastmath function do_smoothing(x::Array{Float64}, y::Array{Float64}, smoother::FRSS)
+@fastmath function do_smoothing(x::T, y::T, smoother::FRSS)::T where {T <: AbstractArray{Float64}}
     ## STEP 0: Prepare
     # x, y =   _sanitizeinput(x, y)
     Nx = length(x)
