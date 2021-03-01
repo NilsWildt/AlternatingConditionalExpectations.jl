@@ -149,7 +149,7 @@ function do_smoothing_old(x::T, y::T, smoother::LLSS)::T where {T <: AbstractArr
         end
         LLSS_values[i] = @views α[i] + β[i] * x[i]
     end
-    return  SArray{Tuple{Nx}}(LLSS_values)
+    return  LLSS_values
 end
 
 @fastmath function do_smoothing(x::T, y::T, smoother::LLSS)::T where {T <: AbstractArray{Float64}}
@@ -178,7 +178,7 @@ end
         LLSS_values[i] = α .+ β .* x[i]
     end
 
-    return  SArray{Tuple{Ny}}(LLSS_values)
+    return  LLSS_values
 end
 
 
@@ -240,7 +240,7 @@ function do_smoothing(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractArray{
         α = -β * xmean + ymean
         LLSSbvals[i] = α + β * x[i]
     end
-    return   SArray{Tuple{Ny}}(LLSSbvals)
+    return   LLSSbvals
 end
 
 
