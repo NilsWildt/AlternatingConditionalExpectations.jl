@@ -192,7 +192,7 @@ function loocv(x::T, y::T, smoother::LLSS)::T where {T <: AbstractArray{Float64}
     Ny = length(y)
     ysmoothed = do_smoothing(x, y, smoother, true)
     # preallocate
-    cv = @MVector zeros(Float64, (Nx,))
+    cv =  zeros(Float64, (Nx,))
     @inbounds @simd for i in 1:Nx
         ind = max(i - k, 1):min(i + k, Nx) # actually take 2k+1 values...
         xmean = mean(x[ind])
@@ -224,7 +224,7 @@ function do_smoothing(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractArray{
         # x, y =   _sanitizeinput(x, y)
     # end
     Ny = length(y)
-    LLSSbvals = @MVector zeros(Float64, Ny)
+    LLSSbvals =  zeros(Float64, Ny)
     
     @fastmath @inbounds @simd  for i in 1:Ny # @inbounds @simd 
         indlow = max(i - k, 1) - min(0, Ny - i - k + 1):i - 1
@@ -251,7 +251,7 @@ function do_smoothing_slow(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractA
         # x, y =   _sanitizeinput(x, y)
     # end
     Ny = length(y)
-    LLSSbvals = @MVector zeros(Float64, Ny)
+    LLSSbvals =  zeros(Float64, Ny)
     
     @inbounds @simd  for i in 1:Ny # @inbounds @simd 
         indlow = max(i - k, 1) - min(0, Ny - i - k + 1):i - 1
@@ -262,14 +262,14 @@ function do_smoothing_slow(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractA
         fxnew = lin_reg(xind, yind)
         LLSSbvals[i] = fxnew(x[i])[1]
     end
-    return   SArray{Tuple{Ny}}(LLSSbvals)
+    return  LLSSbvals
 end
 
 
 function do_smoothing_updating_bug(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
     Ny = length(y)
-    LLSSbvals = @MVector zeros(Float64, Ny)
+    LLSSbvals =  zeros(Float64, Ny)
     C = 0.0
     V = 0.0
     # Calculate first point manually
