@@ -327,12 +327,12 @@ function do_smoothing_updating_bug(x::T, y::T, smoother::LLSSb)::T where {T <: A
 
     end
 
-    return  SArray{Tuple{Ny}}(LLSSbvals)
+    return  LLSSbvals
 end
 
 
 # Smoothing in the smoother.k*2+1 box but calculating abs(y-smoothedvals) plus do LOOCV.
-function loocv(x::Array{Float64}, y::Array{Float64}, smoother::LLSSb)
+function loocv(x::Array{Float64}, y::Array{Float64}, smoother <: Smoother)
     k = smoother.k
     # if !presorted
         # x, y =   _sanitizeinput(x, y)
