@@ -23,7 +23,7 @@ function guess_parameters!(mysmoother::Smoother, N::Int64)
     end
 end
 
-@fastmath function do_smoothing(x::T, y::T, smoother::LAS) where {T <: AbstractVecOrMat{Float64}}
+@fastmath function do_smoothing(x::Vector{Float64},y::Matrix{Float64}, smoother::LAS)}
     k = smoother.k
     # Nx = length(x)
     Ny = length(y)
@@ -42,7 +42,7 @@ mutable struct LASb <: Smoother
     k::Int64
 end
 
-@fastmath function do_smoothing(x::T, y::T, smoother::LASb) where {T <: AbstractVecOrMat{Float64}}
+@fastmath function do_smoothing(x::Vector{Float64},y::Matrix{Float64}, smoother::LASb) 
     k = smoother.k
     Ny = length(y)
     LASbvals =  zeros(Float64, (Ny))
@@ -65,7 +65,7 @@ mutable struct LLSS <: Smoother
     end
 end
 
-function do_smoothing_old(x::T, y::T, smoother::LLSS) where {T <: AbstractVecOrMat{Float64}}
+function do_smoothing_old(x::Vector{Float64},y::Matrix{Float64}, smoother::LLSS) 
     k = smoother.k
     # if !presorted
         # x, y =   _sanitizeinput(x, y)
@@ -152,7 +152,7 @@ function do_smoothing_old(x::T, y::T, smoother::LLSS) where {T <: AbstractVecOrM
     return  LLSS_values
 end
 
-@fastmath function do_smoothing(x::T, y::T, smoother::LLSS) where {T <: AbstractVecOrMat{Float64}}
+@fastmath function do_smoothing(x::Vector{Float64},y::Matrix{Float64}, smoother::LLSS) 
     k = smoother.k
     Ny = length(y)
     LLSS_values =  zeros(Float64, Ny)
@@ -183,7 +183,7 @@ end
 
 
 # Smoothing in the smoother.k*2+1 box but calculating abs(y-smoothedvals) plus do LOOCV.
-function loocv(x::T, y::T, smoother::LLSS) where {T <: AbstractVecOrMat{Float64}}
+function loocv(x::Vector{Float64},y::Matrix{Float64}, smoother::LLSS) 
     k = smoother.k
     # if !presorted
         # x, y =   _sanitizeinput(x, y)
@@ -217,7 +217,7 @@ mutable struct LLSSb <: Smoother
 end
 
 
-function do_smoothing(x::T, y::T, smoother::LLSSb) where {T <: AbstractVecOrMat{Float64}}
+function do_smoothing(x::Vector{Float64},y::Matrix{Float64}, smoother::LLSSb) 
     k = smoother.k
  
     # if !presorted
@@ -244,7 +244,7 @@ function do_smoothing(x::T, y::T, smoother::LLSSb) where {T <: AbstractVecOrMat{
 end
 
 
-function do_smoothing_slow(x::T, y::T, smoother::LLSSb) where {T <: AbstractVecOrMat{Float64}}
+function do_smoothing_slow(x::Vector{Float64},y::Matrix{Float64}, smoother::LLSSb) 
     k = smoother.k
  
     # if !presorted
@@ -266,7 +266,7 @@ function do_smoothing_slow(x::T, y::T, smoother::LLSSb) where {T <: AbstractVecO
 end
 
 
-function do_smoothing_updating_bug(x::T, y::T, smoother::LLSSb) where {T <: AbstractVecOrMat{Float64}}
+function do_smoothing_updating_bug(x::Vector{Float64},y::Matrix{Float64}, smoother::LLSSb) 
     k = smoother.k
     Ny = length(y)
     LLSSbvals =  zeros(Float64, Ny)
@@ -365,7 +365,7 @@ mutable struct Kernelsmooth <: Smoother
 end
 
 
-function do_smoothing(x::T, y::T, smoother::Kernelsmooth) where {T <: AbstractVecOrMat{Float64}}
+function do_smoothing(x::Vector{Float64},y::Matrix{Float64}, smoother::Kernelsmooth) 
     # x, y =   _sanitizeinput(x, y)
     x =  Array{Float64,1}(x)
     y =  Array{Float64,1}(y)
@@ -393,7 +393,7 @@ mutable struct NWKernelsmooth <: Smoother
     smoothk::Kernel
 end
 
-function do_smoothing(x::T, y::T, smoother::NWKernelsmooth) where {T <: AbstractVecOrMat{Float64}}
+function do_smoothing(x::Vector{Float64},y::Matrix{Float64}, smoother::NWKernelsmooth) 
     # x, y =   _sanitizeinput(x, y)
     Nx = length(x)
     Ny = length(y)
@@ -438,7 +438,7 @@ mutable struct FRSS <: Smoother
 end
 
 
-@fastmath function do_smoothing(x::T, y::T, smoother::FRSS)  where {T <: AbstractVecOrMat}
+@fastmath function do_smoothing(x::Vector{Float64},y::Matrix{Float64}, smoother::FRSS)  where {T <: AbstractVecOrMat}
     ## STEP 0: Prepare
     # x, y =   _sanitizeinput(x, y)
     Nx = length(x)
