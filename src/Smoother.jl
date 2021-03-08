@@ -23,7 +23,7 @@ function guess_parameters!(mysmoother::Smoother, N::Int64)
     end
 end
 
-@fastmath function do_smoothing(x::T, y::T, smoother::LAS)::T where {T <: AbstractArray}
+@fastmath function do_smoothing(x::T, y::T, smoother::LAS)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
     # Nx = length(x)
     Ny = length(y)
@@ -42,7 +42,7 @@ mutable struct LASb <: Smoother
     k::Int64
 end
 
-@fastmath function do_smoothing(x::T, y::T, smoother::LASb)::T where {T <: AbstractArray}
+@fastmath function do_smoothing(x::T, y::T, smoother::LASb)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
     Ny = length(y)
     LASbvals =  zeros(Float64, (Ny))
@@ -65,7 +65,7 @@ mutable struct LLSS <: Smoother
     end
 end
 
-function do_smoothing_old(x::T, y::T, smoother::LLSS)::T where {T <: AbstractArray}
+function do_smoothing_old(x::T, y::T, smoother::LLSS)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
     # if !presorted
         # x, y =   _sanitizeinput(x, y)
@@ -152,7 +152,7 @@ function do_smoothing_old(x::T, y::T, smoother::LLSS)::T where {T <: AbstractArr
     return  LLSS_values
 end
 
-@fastmath function do_smoothing(x::T, y::T, smoother::LLSS)::T where {T <: AbstractArray}
+@fastmath function do_smoothing(x::T, y::T, smoother::LLSS)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
     Ny = length(y)
     LLSS_values =  zeros(Float64, Ny)
@@ -183,7 +183,7 @@ end
 
 
 # Smoothing in the smoother.k*2+1 box but calculating abs(y-smoothedvals) plus do LOOCV.
-function loocv(x::T, y::T, smoother::LLSS)::T where {T <: AbstractArray}
+function loocv(x::T, y::T, smoother::LLSS)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
     # if !presorted
         # x, y =   _sanitizeinput(x, y)
@@ -217,7 +217,7 @@ mutable struct LLSSb <: Smoother
 end
 
 
-function do_smoothing(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractArray}
+function do_smoothing(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
  
     # if !presorted
@@ -244,7 +244,7 @@ function do_smoothing(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractArray}
 end
 
 
-function do_smoothing_slow(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractArray}
+function do_smoothing_slow(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
  
     # if !presorted
@@ -266,7 +266,7 @@ function do_smoothing_slow(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractA
 end
 
 
-function do_smoothing_updating_bug(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractArray}
+function do_smoothing_updating_bug(x::T, y::T, smoother::LLSSb)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
     Ny = length(y)
     LLSSbvals =  zeros(Float64, Ny)
@@ -365,7 +365,7 @@ mutable struct Kernelsmooth <: Smoother
 end
 
 
-function do_smoothing(x::T, y::T, smoother::Kernelsmooth)::T where {T <: AbstractArray}
+function do_smoothing(x::T, y::T, smoother::Kernelsmooth)::T where {T <: AbstractArray{Float64}}
     # x, y =   _sanitizeinput(x, y)
     x =  Array{Float64,1}(x)
     y =  Array{Float64,1}(y)
@@ -393,7 +393,7 @@ mutable struct NWKernelsmooth <: Smoother
     smoothk::Kernel
 end
 
-function do_smoothing(x::T, y::T, smoother::NWKernelsmooth)::T where {T <: AbstractArray}
+function do_smoothing(x::T, y::T, smoother::NWKernelsmooth)::T where {T <: AbstractArray{Float64}}
     # x, y =   _sanitizeinput(x, y)
     Nx = length(x)
     Ny = length(y)
@@ -438,7 +438,7 @@ mutable struct FRSS <: Smoother
 end
 
 
-@fastmath function do_smoothing(x::T, y::T, smoother::FRSS)::T where {T <: AbstractArray}
+@fastmath function do_smoothing(x::T, y::T, smoother::FRSS)::T where {T <: AbstractArray{Float64}}
     ## STEP 0: Prepare
     # x, y =   _sanitizeinput(x, y)
     Nx = length(x)
@@ -517,11 +517,17 @@ function _sanitize_k(k)
     return Int64.(round.(k, digits = 0))
 end
 
+function do_smoothing(x::AbstractArray, y::AbstractArray, smoothers::Smoother)
+    for sm in smoothers::Vector{Smoother}
+        y = do_smoothing(x, y, sm)
+    end
+    return y
+end
 
 # In case, we gave it several smoothers, do them in this order every time
 function do_smoothing(x::AbstractArray, y::AbstractArray, smoothers::Array{<:Smoother})
     for sm in smoothers::Vector{Smoother}
         y = do_smoothing(x, y, sm)
     end
-    return SArray{Tuple{length(y)}}(y)
+    return y
 end
