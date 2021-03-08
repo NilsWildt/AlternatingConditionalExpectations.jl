@@ -438,7 +438,7 @@ mutable struct FRSS <: Smoother
 end
 
 
-@fastmath function do_smoothing(x::T, y::T, smoother::FRSS)::T where {T <: AbstractArray{Float64}}
+@fastmath function do_smoothing(x::T, y::T, smoother::FRSS)::T where {T <: AbstractArray}
     ## STEP 0: Prepare
     # x, y =   _sanitizeinput(x, y)
     Nx = length(x)
@@ -517,12 +517,12 @@ function _sanitize_k(k)
     return Int64.(round.(k, digits = 0))
 end
 
-function do_smoothing(x::AbstractArray, y::AbstractArray, smoothers::Smoother)
-    for sm in smoothers::Vector{Smoother}
-        y = do_smoothing(x, y, sm)
-    end
-    return y
-end
+# function do_smoothing(x::AbstractArray, y::AbstractArray, smoothers::Smoother)
+#     for sm in smoothers::Vector{Smoother}
+#         y = do_smoothing(x, y, sm)
+#     end
+#     return y
+# end
 
 # In case, we gave it several smoothers, do them in this order every time
 function do_smoothing(x::AbstractArray, y::AbstractArray, smoothers::Array{<:Smoother})
