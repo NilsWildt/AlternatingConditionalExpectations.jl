@@ -438,7 +438,7 @@ mutable struct FRSS <: Smoother
 end
 
 
-@fastmath function do_smoothing(x::Vector{Float64}, y::Matrix{Float64}, smoother::FRSS)  where {T <: AbstractVecOrMat}
+@fastmath function do_smoothing(x::T, y::T, smoother::FRSS)  where {T <: AbstractVecOrMat}
     ## STEP 0: Prepare
     # x, y =   _sanitizeinput(x, y)
     Nx = length(x)
