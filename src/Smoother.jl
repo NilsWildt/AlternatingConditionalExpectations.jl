@@ -332,7 +332,7 @@ end
 
 
 # Smoothing in the smoother.k*2+1 box but calculating abs(y-smoothedvals) plus do LOOCV.
-function loocv(x::Array{Float64}, y::Array{Float64}, smoother::Smoother)
+function loocv(x::T, y::T, smoother::Smoother)::T where {T <: AbstractArray{Float64}}
     k = smoother.k
     # if !presorted
         # x, y =   _sanitizeinput(x, y)
