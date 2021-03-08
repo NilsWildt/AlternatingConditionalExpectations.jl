@@ -495,7 +495,7 @@ end
     # Final smooth
     lin_smoother =  standardsmooth(smoother.final_J * Nx) 
     final_smooth = do_smoothing(x, interpolated_smooth, lin_smoother)
-    return SArray{Tuple{Nx}}(final_smooth)
+    return final_smooth
 end
 
 Base.String(frss::FRSS) = "Smoothed_FRSS" 
