@@ -1,7 +1,7 @@
 using Random
 using DocStringExtensions
 using Documenter
-using Plots
+using Plots 
 using StatsPlots
 using LaTeXStrings
 using Latexify
@@ -73,6 +73,7 @@ abstract type BenchmarkFunction end
         if transform && length(bf.Φ_x ) != 0 
             x:= bf.Φ_x
             y:= bf.Θ_y
+
         else
         x:=bf.X
         y:=bf.Y
