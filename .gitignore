@@ -6,4 +6,5 @@
 /docs/build
 /docs/Manifest.toml
 /test/coverage/Manifest.toml
-.github/
+.github
+*.github/workflows/*
