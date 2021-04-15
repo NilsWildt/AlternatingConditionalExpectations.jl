@@ -10,6 +10,78 @@ include(srcdir("utils.jl"))
 abstract type BenchmarkFunction end
 
 
+# Plot recipie.
+@recipe function f(bf::BenchmarkFunction;transform=false, full=true)
+#       if length(bf.X) == 0  || !(typeof(bf.X) <: AbstractVector) ||
+#         !(typeof(bf.Φ_x) <: AbstractVector)
+#         error("Benchmark has wrong dimensions, or ACE solution wasn't set yet.  Got: $(typeof(bf))")
+#     end
+
+    markershape --> :circle
+    markersize  --> 2
+
+
+        if full
+            X = bf.X
+            Y = bf.Y
+            Φ_x = bf.Φ_x
+            Θ_y = bf.Θ_y
+            # plot_view_bounds = bf.plot_view_bounds
+            # plot_fcs = bf.plot_fcs
+
+            # # set up the subplots
+            legend := false
+            link := :both
+            # framestyle := [:none :axes :none]
+            grid := false
+            layout := 4
+             seriestype := :scatter
+       
+                
+
+                @series begin
+                    subplot := 1
+                    #            xlims := plot_view_bounds[1][1]
+                    #         ylims:= plot_view_bounds[1][2]
+                    X,Y
+                end
+
+                    @series begin
+                    subplot := 2
+                    #    xlims := plot_view_bounds[1][1]
+                    # ylims:= plot_view_bounds[1][2]
+                    X,Y
+                end
+
+                           @series begin
+                    subplot := 3
+                    #    xlims := plot_view_bounds[1][1]
+                    # ylims:= plot_view_bounds[1][2]
+                    X,Y
+                end
+
+                           @series begin
+                    subplot := 4
+                    #    xlims := plot_view_bounds[1][1]
+                    # ylims:= plot_view_bounds[1][2]
+                    X,Y
+                end
+
+                       
+        else 
+
+        if transform && length(bf.Φ_x ) != 0 
+            x:= bf.Φ_x
+            y:= bf.Θ_y
+        else
+        x:=bf.X
+        y:=bf.Y
+        end
+    end
+    # ()
+end
+
+
 """
 4 Plots for bivariate ACE benchmarks.
 ===
