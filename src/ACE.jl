@@ -1,11 +1,11 @@
 """
-Placeholder for a short summary about AlternatingConditionalExpectation.
+Placeholder for a short summary about ACE.
 """
-module AlternatingConditionalExpectation
+module ACE
 # Base.Experimental.@optlevel 3
-    abstract type ACE end
+    abstract type ACEsim end
     abstract type Smoother end
-    export Smoother,ACE_bivariate_basic,ACE_multivariate , ACE, Acerun,generate_bivariate_data,   do_smoothing, guess_parameters!,ε², stoch_normalize, ACE_multivariate
+    export Smoother,ACEmulti , ACEsim, Acerun,generate_bivariate_data,   do_smoothing, guess_parameters!,ε², stoch_normalize
     # using PkgTemplates
     # t = Template(; user = "nildt", disable_defaults = [Git])
     using Random
@@ -135,7 +135,7 @@ end
 
   # Multivariate ACE values
   # Restart version
-# function ACE_multivariate_obsolete(myace::Acerun{T,S})where {T,S <: AbstractArray} 
+# function ACEmulti_obsolete(myace::Acerun{T,S})where {T,S <: AbstractArray} 
 #     @info "Startin multivariate ACE, the predictor variables have a size of $(size(myace.X))"
 #     # Normalize Mean an Variance, save the transformation
 #     X = myace.X # Predictor variables
@@ -258,7 +258,7 @@ end
     @fastmath return sum(hcat(X[:,1:k - 1], X[:,k + 1:end]), dims = 2)
 end
 
-function ACE_multivariate(myace::Acerun{T,S}) where {T,S <: AbstractArray} 
+function ACEmulti(myace::Acerun{T,S}) where {T,S <: AbstractArray} 
     X = myace.X # Predictor variables
     Nx, m_parameter = size(X)
     Y = myace.Y # Response VEctor

@@ -1,6 +1,6 @@
 ##
 using DrWatson
-@quickactivate "AlternatingConditionalExpectation"
+@quickactivate "ACE"
 include(srcdir("Kernelregression", "Kernelregression.jl"))
 using .Kernelregression
 include(srcdir("utils.jl"))
@@ -8,13 +8,13 @@ include(srcdir("benchmark_functions.jl"))
 using Statistics
 using Pkg
 using Test
-# Pkg.add(url="git@github.com:NilsWildt/AlternatingConditionalExpectation.jl.git")
-using AlternatingConditionalExpectation
+# Pkg.add(url="git@github.com:NilsWildt/ACE.jl.git")
+using ACE
 using PyPlot
 using Random
 pygui(true)
 ENV["JULIA_DEBUG"] = "all"
-import Main.AlternatingConditionalExpectation
+import Main.ACE
 
 ##
  function get_uni(N)
@@ -63,7 +63,7 @@ end
 
 
     @testset "Module ACE (multivariate)" begin
-     Y,X  = AlternatingConditionalExpectation.generate_multivariate_data(500)
+     Y,X  = ACE.generate_multivariate_data(500)
     end
 
 
@@ -104,7 +104,7 @@ end
 
         a = [1,5,2,8]
         asorted = [1,2,5,8]
-        sind, bsind =  AlternatingConditionalExpectation.get_sort_idx_two_way(a)
+        sind, bsind =  ACE.get_sort_idx_two_way(a)
         @test a[sind] == asorted
         @test asorted[bsind] == a
     end
@@ -121,13 +121,13 @@ end
     end
 
 
-    @testset "Module AlternatingConditionalExpectation" begin
-        X, Y = AlternatingConditionalExpectation.generate_bivariate_data(200, 1, 1234) # Set seed
+    @testset "Module ACE" begin
+        X, Y = ACE.generate_bivariate_data(200, 1, 1234) # Set seed
         @test length(X) == 200
         @test isapprox(std(X), 1.0, atol = 1e-1)
 
         X = rand(1000, )
-        Xout = AlternatingConditionalExpectation.stoch_normalize(X)
+        Xout = ACE.stoch_normalize(X)
         @test mean(X) != mean(Xout)
         @test isapprox(mean(Xout), 0, atol = 1e-12) 
         @test isapprox(var(Xout), 1)
