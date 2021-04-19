@@ -14,7 +14,7 @@ using Random
 ENV["JULIA_DEBUG"] = "all"
 
 Nk = 2000
-Benchmark =  f_b2(Nk, 1, "normal", 1.0, 0.2, true, 42, true, (-2., 2.))
+Benchmark =  f_b2(Nk, 1, "normal", 1.0, 1.0, true, 42, false, (-2., 2.))
 # Benchmark =  f_b1(Nk, 1, "normal", 1.0, 0.2, false, 0, false, (-3., 3.))
 # Benchmark =  f_b2(Nk, 1, "uniform", 1.0, 0.5, false, 0, false, (-3., 3.))
 # Benchmark =  f_toy(Nk, 1, "normal", 1.0, 1.0, false, 0, scale_data, (-12., 12.))
@@ -35,3 +35,4 @@ mysmoothers = Array{Smoother}([mysmoother4])
 myace =  ACE.Acerun(X, Y, mysmoothers)
 Benchmark.Φ_x, Benchmark.Θ_y, Benchmark.sIx, Benchmark.sIy, Benchmark.conv_err =    ACEmulti(myace)
 # h1 =  benchmark_ace_plot(Benchmark, "ACE Demo", 80) 
+plot(Benchmark)

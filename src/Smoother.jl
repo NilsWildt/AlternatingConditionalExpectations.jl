@@ -3,6 +3,8 @@ using .Kernelregression
 using Interpolations 
 using DocStringExtensions
 Base.Experimental.@optlevel 3   
+
+  abstract type Smoother end
 mutable struct LAS <: Smoother
     k::Int64
     function LAS(k) 
