@@ -12,7 +12,7 @@ abstract type BenchmarkFunction end
 
 
 # Plot recipie.
-@recipe function f(bf::BenchmarkFunction;transform=false, full=true,dpi=300,plotsize=(1400,900))
+@recipe function f(bf::BenchmarkFunction;transform=false, full=true,dpi=500,plotsize=1.5.*(700,450))
 #       if length(bf.X) == 0  || !(typeof(bf.X) <: AbstractVector) ||
 #         !(typeof(bf.Φ_x) <: AbstractVector)
 #         error("Benchmark has wrong dimensions, or ACE solution wasn't set yet.  Got: $(typeof(bf))")
@@ -83,7 +83,7 @@ abstract type BenchmarkFunction end
                     title:=""
                 xlabel --> "Y"
                 ylabel --> L"\Theta(Y)"
-                        #    xlims := plot_view_bounds[3][1]
+                           xlims := plot_view_bounds[3][1]
                             ylims:= plot_view_bounds[3][2]
                     subplot := 4
                 Y,Θ_y
