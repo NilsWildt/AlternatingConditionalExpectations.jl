@@ -15,7 +15,7 @@ ENV["JULIA_DEBUG"] = "all"
 
 Nk = 2000
 # Benchmark =  f_b2(Nk, 1, "normal", 1.0, 1.0, false, 42, true, (-2., 2.))
-Benchmark =  f_b1(Nk, 1, "false", 1.0, 1.0, false, 0, false, (-3., 3.))
+Benchmark =  f_b1(Nk, 1, "uniform", 1.0, 1.0, false, 0, false, (-3., 3.))
 # Benchmark =  f_b4(Nk, 1, "uniform", 1.0, 0.5, false, 0, false, (-5., 5.))
 # Benchmark =  f_toy(Nk, 1, "normal", 1.0, 0.0, false, 0, false, (-12., 12.))
 X =  Benchmark.X
@@ -26,9 +26,9 @@ Y =  Benchmark.Y
 mysmoother3 =  ACE.LLSS(Nk ÷ 3)
 mysmoother4 =  ACE.LLSSb(Nk ÷ 4)
 mysmoother5 = ACE.FRSS([0.05,0.1,0.5], 0.2, 0.2)
-# # σ = 0.2
+# σ = 0.1
 # mykernel = ACE.Kernelregression.Gaussian(σ)
-# reg = 1E-3
+# reg = 1.0
 # mysmoother2 = ACE.NWKernelsmooth(mykernel)
 mysmoothers = Array{Smoother}([mysmoother4])
 # guess_parameters!(mysmoother, Nk)
