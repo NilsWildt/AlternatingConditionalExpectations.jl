@@ -368,7 +368,7 @@ end
 
             # framestyle := [:shared :shared :shared :shared]
             grid := false
-            layout :=  @layout [a{0.1h}; StatsPlots.grid(2, 2); b{0.2h}] # ;b{0.2h}
+            layout :=  @layout [a{0.05h}; StatsPlots.grid(2, 2); b{0.1h}] # ;b{0.2h}
             seriestype := :scatter
                 background_color := RGB(0.2, 0.2, 0.2)
                 dpi:= dpi
@@ -435,7 +435,7 @@ end
                 xlabel --> "Iterations"
                 ylabel --> "ε"
                     subplot := 6
-                             1:length(bf.conv_err), conv_err
+                            collect( 1:length(bf.conv_err)), bf.conv_err
                 end
 
                        
