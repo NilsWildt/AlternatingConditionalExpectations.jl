@@ -333,7 +333,7 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
 #     thisemse = MSE(Φ_x, Θ_y)
 #     correl = cor(Φ_x, Θ_y)
     # itercount_total = itercount_outer * itercount_inner
-return X,Y, Φ_x, Θ_y, sIx, sIy, bsIx, bsIy, conv_err
+return  ACEres(X=X,Y=Y, Φ_x= Φ_x, Θ_y=Θ_y, sIx=sIx, sIy=sIy, bsIx=bsIx,bsIy= bsIy, conv_err=conv_err)
     # return res
 end
 
@@ -341,8 +341,7 @@ end
 
 
 # Plot recipie.
-@recipe function f(myace::ACEsim;transform=false, full=true,dpi=500,plotsize=1.5.*(700,450))
-bf = myace.res
+@recipe function f(bf::ACEres;transform=false, full=true,dpi=500,plotsize=1.5.*(700,450))
 #       if length(bf.X) == 0  || !(typeof(bf.X) <: AbstractVector) ||
 #         !(typeof(bf.Φ_x) <: AbstractVector)
 #         error("Benchmark has wrong dimensions, or ACE solution wasn't set yet.  Got: $(typeof(bf))")
