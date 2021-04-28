@@ -32,23 +32,23 @@ module ACE
     include("Smoother.jl")
     # pygui(true)
 
-@with_kw struct ACEres
-    X::S
-    Y::S
+@with_kw struct ACEres{S<:AbstractArray}
+    X::S 
+    Y::S 
     Φ_x::S
     Θ_y::S
-    sIx::S
-    sIy::S
-    bsIx::S
-    bsIy::S
+    sIx::AbstractArray
+    sIy::AbstractArray
+    bsIx::AbstractArray
+    bsIy::AbstractArray
     conv_err::AbstractArray
     plot_view_bounds::AbstractArray= [[(minimum(X),maximum(X)),(minimum(Y),maximum(Y))], [(minimum(X),maximum(X)),(minimum(Φ_x),maximum(Φ_x))],[(minimum(Y),maximum(Y)),(minimum(Θ_y),maximum(Θ_y))],[(minimum(Φ_x),maximum(Φ_x)),(minimum(Θ_y),maximum(Θ_y))]]
-    plot_fcs::AbstractArray=[]
-    scale_factors:: [ zeros(2), zeros(2)]
+    plot_fcs::AbstractArray = []
+    scale_factors::AbstractArray= [ zeros(2), zeros(2)]
     description::String="ACE_simulation_result"
 end
 
-mutable struct ACEsim{T,S <: AbstractArray}
+ struct ACEsim{T,S <: AbstractArray}
     "X data"
     X::S
     "Y data"
@@ -61,8 +61,6 @@ mutable struct ACEsim{T,S <: AbstractArray}
     itermax_inner::Int64
     "Max iterations"
     itermax_outer::Int64
-    "Result"
-    res::ACEres
 end
 
 ACEsim(X::S, Y::S, smoother::T, errorbound::Float64 = 1E-4,  itermax_inner::Int64 = 10, itermax_outer::Int64 = 100)   where  {T,S} = ACEsim{T,S}(X, Y, smoother, errorbound, itermax_inner, itermax_outer)
@@ -335,7 +333,117 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
 #     thisemse = MSE(Φ_x, Θ_y)
 #     correl = cor(Φ_x, Θ_y)
     # itercount_total = itercount_outer * itercount_inner
-    return  Φ_x, Θ_y, sIx, sIy, conv_err
+return X,Y, Φ_x, Θ_y, sIx, sIy, bsIx, bsIy, conv_err
+    # return res
+end
+
+
+
+
+# Plot recipie.
+@recipe function f(myace::ACEsim;transform=false, full=true,dpi=500,plotsize=1.5.*(700,450))
+bf = myace.res
+#       if length(bf.X) == 0  || !(typeof(bf.X) <: AbstractVector) ||
+#         !(typeof(bf.Φ_x) <: AbstractVector)
+#         error("Benchmark has wrong dimensions, or ACE solution wasn't set yet.  Got: $(typeof(bf))")
+#     end
+
+    markershape --> :circle
+    markersize  --> 2
+           # # set up the subplots
+            link --> :none
+            size-->plotsize
+  xguide --> "x"
+    yguide --> "y"
+                    margin -->20Plots.px
+
+        if full
+            X = bf.X
+            Y = bf.Y
+            Φ_x = bf.Φ_x
+            Θ_y = bf.Θ_y
+            plot_view_bounds = bf.plot_view_bounds
+            plot_fcs = bf.plot_fcs
+
+     
+
+            # framestyle := [:shared :shared :shared :shared]
+            grid := false
+            layout :=  @layout [a{0.1h}; StatsPlots.grid(2, 2)] # ;b{0.2h}
+            seriestype := :scatter
+                background_color := RGB(0.2, 0.2, 0.2)
+                dpi:= dpi
+                colorbar:= false
+                legend:= false
+   
+                markerstrokewidth := 0
+                e2 = string(round(abs((ε²(Φ_x[bf.sIx], Θ_y[bf.sIy])));digits = 4))
+               @show bf
+                 mytit = join(["\nACE result:\n","ε² = $e2 "])
+                title:= mytit
+           
+   @series begin
+            seriestype := :scatter
+               framestyle:=:none
+                subplot := 1
+                end
+
+
+            @series begin
+                    title:=""
+                     xguide := "X"
+                yguide := "Y"
+                    subplot := 2
+                               xlims := plot_view_bounds[1][1]
+                            ylims:= plot_view_bounds[1][2]
+                    X,Y
+                end
+           
+                    @series begin
+                    title:=""
+                         xlabel --> "X"
+                ylabel --> L"\Phi(X)"
+                    # xlims := plot_view_bounds[2][1]
+                            ylims:= plot_view_bounds[2][2]
+                    subplot := 3
+                        X,Φ_x
+                end
+
+                           @series begin
+                    title:=""
+                xlabel --> "Y"
+                ylabel --> L"\Theta(Y)"
+                           xlims := plot_view_bounds[3][1]
+                            ylims:= plot_view_bounds[3][2]
+                    subplot := 4
+                Y,Θ_y
+
+                end
+
+                           @series begin
+                    title:=""
+                xlabel --> L"\Phi(X)"
+                ylabel --> L"\Theta(Y)"
+                                        # xlims := plot_view_bounds[4][1]
+                            ylims:= plot_view_bounds[4][2]
+                    subplot := 5
+                             Φ_x, Θ_y
+
+                end
+
+                       
+        else 
+
+        if transform && length(bf.Φ_x ) != 0 
+            x:= bf.Φ_x
+            y:= bf.Θ_y
+
+        else
+        x:=bf.X
+        y:=bf.Y
+        end
+    end
+    # ()
 end
 
 
