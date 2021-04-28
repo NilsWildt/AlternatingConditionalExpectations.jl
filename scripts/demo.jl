@@ -15,8 +15,8 @@ ENV["JULIA_DEBUG"] = "all"
 
 Nk = 2000
 # Benchmark =  f_b2(Nk, 1, "normal", 1.0, 1.0, false, 42, true, (-2., 2.))
-Benchmark =  f_b1(Nk, 1, "uniform", 1.0, 1.0, false, 0, false, (-3., 3.))
-# Benchmark =  f_b4(Nk, 1, "uniform", 1.0, 0.5, false, 0, false, (-5., 5.))
+# Benchmark =  f_b1(Nk, 1, "uniform", 1.0, 1.0, false, 0, false, (-3., 3.))
+Benchmark =  f_b4(Nk, 1, "uniform", 1.0, 0.5, false, 0, false, (-5., 5.))
 # Benchmark =  f_toy(Nk, 1, "normal", 1.0, 0.0, false, 0, false, (-12., 12.))
 X =  Benchmark.X
 Y =  Benchmark.Y
@@ -36,4 +36,6 @@ myace =  ACE.ACEsim(X,Y,mysmoothers)
 res = ACE.run(myace)
 # Benchmark.Φ_x, Benchmark.Θ_y, Benchmark.sIx, Benchmark.sIy, Benchmark.conv_err
 # h1 =  benchmark_ace_plot(Benchmark, "ACE Demo", 80) 
-plot(res)
+gr()
+h1 = plot(res)
+display(h1)
