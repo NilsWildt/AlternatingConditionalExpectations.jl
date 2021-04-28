@@ -431,11 +431,13 @@ end
                 end
 
                                 @series begin
+                                        seriestype := :scatter
+                                            markersize  := 3
                     title:=""
                 xlabel --> "Iterations"
                 ylabel --> "ε"
-                    subplot := 6
-                            collect( 1:length(bf.conv_err)), bf.conv_err
+                subplot := 6
+                 Array{Float64}(collect( 1:length(bf.conv_err))),   Array{Float64}(bf.conv_err)
                 end
 
                        
