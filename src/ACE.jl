@@ -3,9 +3,9 @@ Placeholder for a short summary about ACE.
 """
 module ACE
 # Base.Experimental.@optlevel 3
-    abstract type ACEsim end
+    # abstract type ACEsim end
     abstract type Smoother end
-    export Smoother,ACEmulti , ACEsim, Acerun,generate_bivariate_data,   do_smoothing, guess_parameters!,ε², stoch_normalize
+    export Smoother,run , ACEsim,generate_bivariate_data,   do_smoothing, guess_parameters!,ε², stoch_normalize
     # using PkgTemplates
     # t = Template(; user = "nildt", disable_defaults = [Git])
     using Random
@@ -23,6 +23,7 @@ module ACE
     using StaticArrays
     using HybridArrays
     using Infiltrator
+    using Parameters
     # using PyPlot
     # using ProgressMeter
     include("utils.jl")
@@ -31,7 +32,23 @@ module ACE
     include("Smoother.jl")
     # pygui(true)
 
-struct Acerun{T,S <: AbstractArray}
+@with_kw struct ACEres
+    X::S
+    Y::S
+    Φ_x::S
+    Θ_y::S
+    sIx::S
+    sIy::S
+    bsIx::S
+    bsIy::S
+    conv_err::AbstractArray
+    plot_view_bounds::AbstractArray= [[(minimum(X),maximum(X)),(minimum(Y),maximum(Y))], [(minimum(X),maximum(X)),(minimum(Φ_x),maximum(Φ_x))],[(minimum(Y),maximum(Y)),(minimum(Θ_y),maximum(Θ_y))],[(minimum(Φ_x),maximum(Φ_x)),(minimum(Θ_y),maximum(Θ_y))]]
+    plot_fcs::AbstractArray=[]
+    scale_factors:: [ zeros(2), zeros(2)]
+    description::String="ACE_simulation_result"
+end
+
+mutable struct ACEsim{T,S <: AbstractArray}
     "X data"
     X::S
     "Y data"
@@ -44,9 +61,11 @@ struct Acerun{T,S <: AbstractArray}
     itermax_inner::Int64
     "Max iterations"
     itermax_outer::Int64
+    "Result"
+    res::ACEres
 end
 
-Acerun(X::S, Y::S, smoother::T, errorbound::Float64 = 1E-4,  itermax_inner::Int64 = 10, itermax_outer::Int64 = 100)   where  {T,S} = Acerun{T,S}(X, Y, smoother, errorbound, itermax_inner, itermax_outer)
+ACEsim(X::S, Y::S, smoother::T, errorbound::Float64 = 1E-4,  itermax_inner::Int64 = 10, itermax_outer::Int64 = 100)   where  {T,S} = ACEsim{T,S}(X, Y, smoother, errorbound, itermax_inner, itermax_outer)
 
 
 function get_sortidx(X::T where T <:  AbstractArray)::Tuple{Vector{Int64},Vector{Int64}}
@@ -101,7 +120,7 @@ end
     return  [X1 X2 X3], Y
 end
 
- function 𝔼_conditional(Y::Array{Float64}, X::Array{Float64},  myace::Acerun, sindx::Vector{Int64}, bindx::Vector{Int64})
+ function 𝔼_conditional(Y::Array{Float64}, X::Array{Float64},  myace::ACEsim, sindx::Vector{Int64}, bindx::Vector{Int64})
      # E(Y|X): u(x) ... (however x is implicitly given.)
     X = X[sindx]
     Y = Y[sindx]
@@ -135,7 +154,7 @@ end
 
   # Multivariate ACE values
   # Restart version
-# function ACEmulti_obsolete(myace::Acerun{T,S})where {T,S <: AbstractArray} 
+# function ACEmulti_obsolete(myace::ACEsim{T,S})where {T,S <: AbstractArray} 
 #     @info "Startin multivariate ACE, the predictor variables have a size of $(size(myace.X))"
 #     # Normalize Mean an Variance, save the transformation
 #     X = myace.X # Predictor variables
@@ -209,7 +228,7 @@ end
 #     return  Φ_x, Θ_y, itercount_inner, itercount_outer, itercount_total, var_unexp, thisemse, correl
 # end
 
-# function ACE_bivariate_basic(myace::Acerun{T,S})where {T,S <: AbstractArray} 
+# function ACE_bivariate_basic(myace::ACEsim{T,S})where {T,S <: AbstractArray} 
 #     Nx = length(myace.X)
 #     X = myace.X
 #     Y = myace.Y
@@ -258,7 +277,7 @@ end
     @fastmath return sum(hcat(X[:,1:k - 1], X[:,k + 1:end]), dims = 2)
 end
 
-function ACEmulti(myace::Acerun{T,S}) where {T,S <: AbstractArray} 
+function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray} 
     X = myace.X # Predictor variables
     Nx, m_parameter = size(X)
     Y = myace.Y # Response VEctor

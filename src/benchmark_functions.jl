@@ -5,8 +5,8 @@ using Plots
 using StatsPlots
 using LaTeXStrings
 using Latexify
-using DrWatson
 using PrettyTables
+using Parameters
 include(srcdir("utils.jl"))
 abstract type BenchmarkFunction end
 
