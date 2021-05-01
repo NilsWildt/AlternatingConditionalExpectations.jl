@@ -140,6 +140,16 @@ end
 end
 
 
+function RMSE(Ytrue::Array{Float64}, Yestimated::Array{Float64})::Float64
+    return sqrt(mean((Ytrue .- Yestimated).^2))
+end
+
+
+function  AARD(Ytrue::Array{Float64}, Yestimated::Array{Float64})::Float64
+    return 100.0 ./length(Ytrue) * sum(abs.(Yestimated-Ytrue)./Ytrue)
+end
+
+
 function ε²(Φ_x::Array{Float64}, Θ_y::Array{Float64})::Float64
             # Please input already transformed variables
     err = mean((Θ_y .- sum(Φ_x, dims = 2)).^2) 
@@ -468,15 +478,6 @@ end
     # ()
 end
 
-
-function RMSE(Ytrue::AbstractArray, Yestimated::AbstractArray)::Float64
-    return sqrt(mean((Ytrue .- Yestimated).^2))
-end
-
-
-function  AARD(Ytrue::AbstractArray, Yestimated::AbstractArray)::Float64
-    return 100.0 ./length(Ytrue) * sum(abs.(Yestimated-Ytrue)./Ytrue)
-end
 
 
 
