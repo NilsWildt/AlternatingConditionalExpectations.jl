@@ -22,3 +22,6 @@ function pErr(Ytrue::AbstractArray, Yestimated::AbstractArray)::Float64
     return mean(((Ytrue .- Yestimated).^2))
 end
 
+function  AARD(Ytrue::AbstractArray, Yestimated::AbstractArray)::Float64
+    return 100.0 ./length(Ytrue) * sum(abs.(Yestimated-Ytrue)./Ytrue)
+end
