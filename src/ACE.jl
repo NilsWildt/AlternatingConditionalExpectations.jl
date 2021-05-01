@@ -24,6 +24,7 @@ module ACE
     using HybridArrays
     using Infiltrator
     using Parameters
+    using StatsBase
     # using PyPlot
     # using ProgressMeter
     include("utils.jl")
@@ -48,6 +49,8 @@ module ACE
     scale_factors::AbstractArray= [ zeros(2), zeros(2)]
     r_orig::Float64
     r²::Float64
+    spearman_orig::Float64
+    spearman_r²::Float64
     ρ::Float64 # max(exp(phi(y)*sum(phi_xi)))
     RMSE::Float64
     AARD::Float64
@@ -324,6 +327,7 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
 
 
     conv_err = []
+    totalcount = 0
     i = 1
     while (abs(e_old - e_new) > myace.errorbound || i < 2)  && i <= myace.itermax_outer
         j = 1
@@ -338,6 +342,7 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
             @debug "Inner loop" (e_old - e_new )  i j
             push!(conv_err, abs(e_old - e_new))
             j += 1
+            totalcount  += 1
         end
         e_old = e_new;
         Θ_y .=  Θ_candidate
@@ -349,14 +354,16 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
         push!(conv_err, abs(e_old - e_new))
     end
 
-    r_orig =cor(X, Y)
-    r² = cor(Φ_x, Θ_y)
+    r_orig =cor(X, Y)[1,1]
+    r² = cor(Φ_x, Θ_y)[1,1]
+    spearman_orig = StatsBase.corspearman(vec(X), vec(Y))
+    spearman_r² = StatsBase.corspearman(vec(Φ_x), vec(Θ_y))
     ρ =     ε²(Φ_x, Θ_y)
-    RMSE = RMSE(Φ_x, Θ_y)
-    AARD = AARD(Φ_x, Θ_y)
+    mRMSE = RMSE(Φ_x, Θ_y)
+    mAARD = AARD(Φ_x, Θ_y)
     t =  time() - start
-    itercount=itercount_outer * itercount_inner
-return  ACEres(X=X,Y=Y, Φ_x= Φ_x, Θ_y=Θ_y, sIx=sIx, sIy=sIy, bsIx=bsIx,bsIy= bsIy, conv_err=conv_err, r_orig =  r_orig , r² =  r², ρ  =  ρ , RMSE =  RMSE, AARD =  AARD, t  =  t,itercount=itercount)
+    itercount= totalcount
+return  ACEres(X=X,Y=Y, Φ_x= Φ_x, Θ_y=Θ_y, sIx=sIx, sIy=sIy, bsIx=bsIx,bsIy= bsIy, conv_err=conv_err, r_orig =  r_orig , r² =  r²,spearman_orig=spearman_orig,    spearman_r²=    spearman_r², ρ  =  ρ , RMSE =  mRMSE, AARD =  mAARD, t  =  t,itercount=itercount)
     # return res
 end
 

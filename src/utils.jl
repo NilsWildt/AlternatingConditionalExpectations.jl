@@ -2,7 +2,7 @@ using Documenter
 using DocStringExtensions
 using StaticArrays
 
-include("error_utils.jl")
+# include("error_utils.jl")
 include("plot_utils.jl")
 include("ranking_utils.jl")
 
