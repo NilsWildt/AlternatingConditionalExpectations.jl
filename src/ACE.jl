@@ -30,6 +30,7 @@ module ACE
         # Generate Test dataset which is correlated. 
         # SEED = Int64();
     include("Smoother.jl")
+
     # pygui(true)
 
 @with_kw struct ACEres{S<:AbstractArray}
@@ -466,6 +467,17 @@ end
     end
     # ()
 end
+
+
+function RMSE(Ytrue::AbstractArray, Yestimated::AbstractArray)::Float64
+    return sqrt(mean((Ytrue .- Yestimated).^2))
+end
+
+
+function  AARD(Ytrue::AbstractArray, Yestimated::AbstractArray)::Float64
+    return 100.0 ./length(Ytrue) * sum(abs.(Yestimated-Ytrue)./Ytrue)
+end
+
 
 
 end            
