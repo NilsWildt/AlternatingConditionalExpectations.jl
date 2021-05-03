@@ -47,12 +47,12 @@ module ACE
     plot_view_bounds::AbstractArray= [[(minimum(X),maximum(X)),(minimum(Y),maximum(Y))], [(minimum(X),maximum(X)),(minimum(Φ_x),maximum(Φ_x))],[(minimum(Y),maximum(Y)),(minimum(Θ_y),maximum(Θ_y))],[(minimum(Φ_x),maximum(Φ_x)),(minimum(Θ_y),maximum(Θ_y))]]
     plot_fcs::AbstractArray = []
     scale_factors::AbstractArray= [ zeros(2), zeros(2)]
-    r_orig::Float64
-    r²::Float64
-    spearman_orig::Float64
-    spearman_r²::Float64
+    r_orig::AbstractArray
+    r²::AbstractArray
+    # spearman_orig::Float64
+    # spearman_r²::Float64
     ρ::Float64 # max(exp(phi(y)*sum(phi_xi)))
-    RMSE::Float64
+    # RMSE::Float64
     AARD::Float64
     t::Float64 
     itercount::Int64
@@ -74,7 +74,7 @@ end
     itermax_outer::Int64
 end
 
-ACEsim(X::S, Y::S, smoother::T, errorbound::Float64 = 1E-4,  itermax_inner::Int64 = 10, itermax_outer::Int64 = 100)   where  {T,S} = ACEsim{T,S}(X, Y, smoother, errorbound, itermax_inner, itermax_outer)
+ACEsim(X::S, Y::S, smoother::T, errorbound::Float64 = 1E-4,  itermax_inner::Int64 = 50, itermax_outer::Int64 = 500)   where  {T,S} = ACEsim{T,S}(X, Y, smoother, errorbound, itermax_inner, itermax_outer)
 
 
 function get_sortidx(X::T where T <:  AbstractArray)::Tuple{Vector{Int64},Vector{Int64}}
@@ -148,8 +148,8 @@ function RMSE(Ytrue::Array{Float64}, Yestimated::Array{Float64})::Float64
 end
 
 
-function  AARD(Ytrue::Array{Float64}, Yestimated::Array{Float64})::Float64
-    return 100.0 ./length(Ytrue) * sum(abs.(Yestimated-Ytrue)./Ytrue)
+function  AARD(Y::Array{Float64}, X::AbstractMatrix)::Float64
+    return 100.0 ./length(X) * sum(abs.(X.-Y)./Y)
 end
 
 
@@ -354,16 +354,16 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
         push!(conv_err, abs(e_old - e_new))
     end
 
-    r_orig =cor(X, Y)[1,1]
-    r² = cor(Φ_x, Θ_y)[1,1]
-    spearman_orig = StatsBase.corspearman(vec(X), vec(Y))
-    spearman_r² = StatsBase.corspearman(vec(Φ_x), vec(Θ_y))
+    r_orig =cor(X, Y)
+    r² = cor(Φ_x, Θ_y)
+    # spearman_orig = StatsBase.corspearman(vec(X), vec(Y))
+    # spearman_r² = StatsBase.corspearman(vec(Φ_x), vec(Θ_y))
     ρ =     ε²(Φ_x, Θ_y)
-    mRMSE = RMSE(Φ_x, Θ_y)
+    # mRMSE = RMSE(Φ_x, Θ_y)
     mAARD = AARD(Φ_x, Θ_y)
     t =  time() - start
     itercount= totalcount
-return  ACEres(X=X,Y=Y, Φ_x= Φ_x, Θ_y=Θ_y, sIx=sIx, sIy=sIy, bsIx=bsIx,bsIy= bsIy, conv_err=conv_err, r_orig =  r_orig , r² =  r²,spearman_orig=spearman_orig,    spearman_r²=    spearman_r², ρ  =  ρ , RMSE =  mRMSE, AARD =  mAARD, t  =  t,itercount=itercount)
+return  ACEres(X=X,Y=Y, Φ_x= Φ_x, Θ_y=Θ_y, sIx=sIx, sIy=sIy, bsIx=bsIx,bsIy= bsIy, conv_err=conv_err, r_orig =  r_orig , r² =  r², ρ  =  ρ , AARD =  mAARD, t  =  t,itercount=itercount)
     # return res
 end
 
@@ -371,7 +371,7 @@ end
 
 
 # Plot recipie.
-@recipe function f(bf::ACEres;transform=false, full=true,dpi=500,plotsize=1.5.*(700,450))
+@recipe function f(bf::ACEres;transform=false, full=true,dpi=500,plotsize=2. .*(1200,450))
 #       if length(bf.X) == 0  || !(typeof(bf.X) <: AbstractVector) ||
 #         !(typeof(bf.Φ_x) <: AbstractVector)
 #         error("Benchmark has wrong dimensions, or ACE solution wasn't set yet.  Got: $(typeof(bf))")
@@ -394,11 +394,12 @@ end
             plot_view_bounds = bf.plot_view_bounds
             plot_fcs = bf.plot_fcs
 
+            n = size(X,2)
      
 
             # framestyle := [:shared :shared :shared :shared]
             grid := false
-            layout :=  @layout [a{0.05h}; StatsPlots.grid(2, 2); b{0.1h}] # ;b{0.2h}
+            layout :=  @layout [a{0.05h}; StatsPlots.grid(3,  n)  b{0.3w}; c{0.1h}] # ;b{0.2h}
             seriestype := :scatter
                 background_color := RGB(0.2, 0.2, 0.2)
                 dpi:= dpi
@@ -411,32 +412,53 @@ end
                  mytit = join(["\nACE result:\n","ε² = $e2 "])
                 title:= mytit
            
-   @series begin
-            seriestype := :scatter
-               framestyle:=:none
-                subplot := 1
+              @series begin
+                    seriestype := :scatter
+                    framestyle:=:none
+                        subplot := 1
                 end
 
-
-            @series begin
-                    title:=""
-                     xguide := "X"
-                yguide := "Y"
-                    subplot := 2
-                               xlims := plot_view_bounds[1][1]
-                            ylims:= plot_view_bounds[1][2]
-                    X,Y
-                end
-           
+ # do the first n:
+                for i in 1:Int64(n)
                     @series begin
+                        seriestype := :scatter
+                        title:=""
+                        xguide := "X$i"
+                            yguide := "Y"
+                            subplot := i+1
+                                    xlims := plot_view_bounds[1][1]
+                                    ylims:= plot_view_bounds[1][2]
+                                X[:,i],Y
+                        end
+            end
+            #second row 
+                       for i in 1:Int64(n)
+                    @series begin
+                            seriestype := :scatter
                     title:=""
                          xlabel --> "X"
-                ylabel --> L"\Phi(X)"
+                ylabel --> "Φ(X$i)"
                     # xlims := plot_view_bounds[2][1]
                             ylims:= plot_view_bounds[2][2]
-                    subplot := 3
-                        X,Φ_x
+                    subplot := n+1+i
+                        X[:,i],Φ_x[:,i]
                 end
+            end
+
+            # Last row
+            for i in 1:Int64(n)
+                           @series begin
+                    title:=""
+                xlabel --> "Φ(X$i)"
+                ylabel --> L"\Theta(Y)"
+                                        # xlims := plot_view_bounds[4][1]
+                            ylims:= plot_view_bounds[4][2]
+                    subplot := 2*n+1+i
+                             Φ_x[:,i], Θ_y
+
+                end
+            end
+
 
                            @series begin
                     title:=""
@@ -444,21 +466,11 @@ end
                 ylabel --> L"\Theta(Y)"
                            xlims := plot_view_bounds[3][1]
                             ylims:= plot_view_bounds[3][2]
-                    subplot := 4
+                    subplot := 3*n+1+1
                 Y,Θ_y
 
                 end
 
-                           @series begin
-                    title:=""
-                xlabel --> L"\Phi(X)"
-                ylabel --> L"\Theta(Y)"
-                                        # xlims := plot_view_bounds[4][1]
-                            ylims:= plot_view_bounds[4][2]
-                    subplot := 5
-                             Φ_x, Θ_y
-
-                end
 
                                 @series begin
                                         seriestype := :scatter
@@ -466,7 +478,7 @@ end
                     title:=""
                 xlabel --> "Iterations"
                 ylabel --> "ε"
-                subplot := 6
+                subplot := 3*n+1+1+1
                  Array{Float64}(collect( 1:length(bf.conv_err))),   Array{Float64}(bf.conv_err)
                 end
 
