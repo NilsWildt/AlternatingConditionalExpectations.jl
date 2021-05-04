@@ -371,7 +371,7 @@ end
 
 
 # Plot recipie.
-@recipe function f(bf::ACEres;transform=false, full=true,dpi=500,plotsize=1. .*(2200,2200))
+@recipe function f(bf::ACEres;transform=false, full=true,dpi=500,plotsize=2. .*(1200,450))
 #       if length(bf.X) == 0  || !(typeof(bf.X) <: AbstractVector) ||
 #         !(typeof(bf.Φ_x) <: AbstractVector)
 #         error("Benchmark has wrong dimensions, or ACE solution wasn't set yet.  Got: $(typeof(bf))")
@@ -394,10 +394,10 @@ end
 
             # remove nan:
 
-            X[isnan.(X)] .= -Inf
-            Y[isnan.(Y)] .= -Inf
-            Φ_x[isnan.(Φ_x)] .= -Inf
-            Θ_y[isnan.(Θ_y)] .= -Inf
+            X[isnan.(X)] .= 0.0 #  -Inf64
+            Y[isnan.(Y)] .= 0.0 #  -Inf64
+            Φ_x[isnan.(Φ_x)] .= 0.0 #  -Inf64
+            Θ_y[isnan.(Θ_y)] .= 0.0 #  -Inf64
 
 
             plot_view_bounds = bf.plot_view_bounds
@@ -412,8 +412,6 @@ end
             seriestype := :scatter
                 background_color := RGB(0.2, 0.2, 0.2)
                 dpi:= dpi
-                 bottom_margin:=50Plots.px
-                left_margin:=100Plots.px
                 colorbar:= false
                 legend:= false
    

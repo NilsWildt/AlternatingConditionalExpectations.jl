@@ -22,4 +22,4 @@ Simulation1 =  ACE.ACEsim(Benchmark.X,Benchmark.Y,smoother)
 result = ACE.run(Simulation1)
 end
 gr()
-display(plot(result, bottom_margin=50Plots.px, left_margin=100Plots.px))
+display(plot(result))
