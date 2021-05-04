@@ -391,6 +391,15 @@ end
             Y = bf.Y
             Φ_x = bf.Φ_x
             Θ_y = bf.Θ_y
+
+            # remove nan:
+
+            X[isnan.(X)] .= -Inf
+            Y[isnan.(Y)] .= -Inf
+            Φ_x[isnan.(Φ_x)] .= -Inf
+            Θ_y[isnan.(Θ_y)] .= -Inf
+
+
             plot_view_bounds = bf.plot_view_bounds
             plot_fcs = bf.plot_fcs
 

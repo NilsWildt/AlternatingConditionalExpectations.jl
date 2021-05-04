@@ -15,7 +15,7 @@ include(srcdir("benchmark_functions.jl"))
 ########################################################################
 ########################################################################
 @time begin
-Nk = 2000 # Problem size 
+Nk = 500 # Problem size 
 Benchmark =  f_b2(Nk, 1, "normal", 1.0, 0.2, true, 123, false, (-5., 5.))
 smoother = Array{Smoother}([ACE.LLSSb(Nk ÷ 5)])
 Simulation1 =  ACE.ACEsim(Benchmark.X,Benchmark.Y,smoother)
