@@ -435,8 +435,8 @@ end
                         xguide := "X$i"
                             yguide := "Y"
                             subplot := i+1
-                                    xlims := plot_view_bounds[1][1]
-                                    ylims:= plot_view_bounds[1][2]
+                                    # xlims := plot_view_bounds[1][1]
+                                    # ylims:= plot_view_bounds[1][2]
                                 X[:,i],Y
                         end
             end
@@ -448,7 +448,7 @@ end
                          xlabel --> "X"
                 ylabel --> "Φ(X$i)"
                     # xlims := plot_view_bounds[2][1]
-                            ylims:= plot_view_bounds[2][2]
+                            # ylims:= plot_view_bounds[2][2]
                     subplot := n+1+i
                         X[:,i],Φ_x[:,i]
                 end
@@ -461,7 +461,7 @@ end
                 xlabel --> "Φ(X$i)"
                 ylabel --> L"\Theta(Y)"
                                         # xlims := plot_view_bounds[4][1]
-                            ylims:= plot_view_bounds[4][2]
+                            # ylims:= plot_view_bounds[4][2]
                     subplot := 2*n+1+i
                              Φ_x[:,i], Θ_y
 
@@ -473,8 +473,8 @@ end
                     title:=""
                 xlabel --> "Y"
                 ylabel --> L"\Theta(Y)"
-                           xlims := plot_view_bounds[3][1]
-                            ylims:= plot_view_bounds[3][2]
+                        #    xlims := plot_view_bounds[3][1]
+                            # ylims:= plot_view_bounds[3][2]
                     subplot := 3*n+1+1
                 Y,Θ_y
 
