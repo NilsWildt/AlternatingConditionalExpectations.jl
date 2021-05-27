@@ -72,8 +72,6 @@ function sort_two_arrays_native(x::AbstractArray, y::AbstractArray)::Tuple{Abstr
     return x[sortind], y[sortind]
 end
 
-
-
 function lin_reg(x, y)
     β = [ ones(length(x))  x ] \ y
     β_0 = β[1]
@@ -81,7 +79,6 @@ function lin_reg(x, y)
     fxnew(xnew) =  β  .* xnew .+ β_0
     return fxnew
 end
-
 
 function logrange(start, ende, npoints)
     return  LinRange(10.0.^start, 10.0.^ende, npoints)

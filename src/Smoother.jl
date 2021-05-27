@@ -2,13 +2,30 @@ include("Kernelregression/Kernelregression.jl")
 using .Kernelregression
 using Interpolations 
 using DocStringExtensions
+using ImageFiltering
+# using LocalFilters
 Base.Experimental.@optlevel 3   
 
-  abstract type Smoother end
+
+
+"""
+LAS Smoother
+===
+
+See above.
+
+Use: 
+$(TYPEDSIGNATURES)
+
+with
+
+k : window-width 
+"""
+abstract type Smoother end
 mutable struct LAS <: Smoother
-    k::Int64
-    function LAS(k) 
-        new(_sanitize_k(k))
+    window::Int64
+    function LAS(window) 
+        new(_sanitize_k(window))
     end
 end
 
@@ -16,29 +33,40 @@ end
 #     guess_parameter!(mysmoother, N)
 # end
 
-function guess_parameters!(mysmoother::Smoother, N::Int64)
-    try
-        mysmoother.k = Int64(floor((N + 2) / 4))
-        println("We're doing it with k = $(mysmoother.k)")
-    catch e
-        println("We don't have a k, as we're probably using kernels.")
-    end
-end
+# function guess_parameters!(mysmoother::Smoother, N::Int64)
+#     try
+#         mysmoother.k = Int64(floor((N + 2) / 4))
+#         println("We're doing it with k = $(mysmoother.k)")
+#     catch e
+#         println("We don't have a k, as we're probably using kernels.")
+#     end
+# end
 
+# @fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LAS)
+#     k = smoother.k
+#     Ny = length(y)
+#     LASvals =  zeros(Float64, Ny)
+#     @inbounds @simd for i in 1:Ny
+#         LASvals[i] =  sum(@views  y[max(i - k, 1):min(i + k, Ny)])
+#     end
+#     return LASvals ./Ny
+# end
+
+# Base.String(k::LAS) = "Smoothed_LAS($(2 * k.k + 1))"
 @fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LAS)
-    k = smoother.k
-    # Nx = length(x)
+    window = smoother.window
     Ny = length(y)
-    LASvals =  zeros(Float64, Ny)
-    c = 1
-    @inbounds @simd for i in 1:Ny
-        LASvals[i] =  sum(@views  y[max(i - k, 1):min(i + k, Ny)])
-        c = c + 1
-    end
-    return LASvals ./ c
+   LASvals =  mapwindow(mean, y, window) 
+
+    # LASvals =  zeros(Float64, Ny)
+    # @inbounds @simd for i in 1:Ny
+    #     LASvals[i] =  sum(@views  y[max(i - k, 1):min(i + k, Ny)])
+    # end
+    return LASvals #./Ny
 end
 
 Base.String(k::LAS) = "Smoothed_LAS($(2 * k.k + 1))"
+
 
 mutable struct LASb <: Smoother
     k::Int64
@@ -515,8 +543,12 @@ Base.String(frss::FRSS) = "Smoothed_FRSS"
 # end
 
 function _sanitize_k(k)
-    k = k / 2
-    return Int64.(round.(k, digits = 0))
+    @info "Made it to this file"
+    if typeof(k)!= Int64
+        @warn "Smoother bandwidth should be of type Int64. We round and cast it.  It was beofre of type: " typeof(k)
+    k =  Int64.(round.(k, digits = 0))
+    end
+    return k
 end
 
 # function do_smoothing(x::AbstractVecOrMat, y::AbstractVecOrMat, smoothers::Smoother)
