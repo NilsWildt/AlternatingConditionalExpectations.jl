@@ -63,7 +63,7 @@ Base.String(k::LAS) = "Smoothed_LAS($(2 * k.k + 1))"
 
 
 mutable struct LASb <: Smoother
-    k::Int64
+    window::Int64
 end
 
 
