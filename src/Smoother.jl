@@ -1,4 +1,4 @@
-include("Kernelregression/Kernelregression.jl")
+# include("Kernelregression/Kernelregression.jl")
 using .Kernelregression
 using Interpolations 
 using DocStringExtensions
