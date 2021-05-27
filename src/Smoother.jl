@@ -2,6 +2,7 @@
 using Interpolations 
 using DocStringExtensions
 using ImageFiltering
+using StatsBase
 # using LocalFilters
 Base.Experimental.@optlevel 3   
 
@@ -54,7 +55,7 @@ end
 # Base.String(k::LAS) = "Smoothed_LAS($(2 * k.k + 1))"
 @fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LAS)
     window = smoother.window
-    Ny = length(y)
+    # Ny = length(y)
    LASvals =  mapwindow(mean, y, window) 
 
     # LASvals =  zeros(Float64, Ny)
@@ -390,7 +391,7 @@ Base.String(k::LLSSb) = "Smoothed_LLSSb($(2 * k.k + 1))"
 
 mutable struct Kernelsmooth <: Smoother
     reg::Float64
-    smoothk::ACE.Kernel
+    smoothk::SKernel
 end
 
 
@@ -419,7 +420,7 @@ end
 
 
 mutable struct NWKernelsmooth <: Smoother
-    smoothk::ACE.Kernel
+    smoothk::SKernel
 end
 
 function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::NWKernelsmooth) 

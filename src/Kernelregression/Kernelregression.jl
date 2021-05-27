@@ -4,8 +4,8 @@ module Kernelregression
 using LinearAlgebra
 using Revise
 using StaticArrays
-abstract type Kernel end
-export get_kernel_interpolant, Kernel
+abstract type SKernel end
+export get_kernel_interpolant, SKernel
 
 
 include("k_gaussian.jl")
@@ -66,7 +66,7 @@ function regularize!(K::AbstractMatrix, reg::Float64 = 1E-6)
     K .+= reg .* 1.0I(size(K)[1])    
 end
 
-function get_kernel_interpolant(X::AbstractArray, Y::AbstractArray, mykernel::Kernel, reg::Float64 = 1E-6)
+function get_kernel_interpolant(X::AbstractArray, Y::AbstractArray, mykernel::SKernel, reg::Float64 = 1E-6)
     K = evalKmatrix(mykernel, X, X) # Both arrays (N,1)
     regularize!(K, reg)
     facts = (K \ Y) 
