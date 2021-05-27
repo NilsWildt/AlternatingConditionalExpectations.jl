@@ -25,6 +25,8 @@ module ACE
     using Infiltrator
     using Parameters
     using StatsBase
+    include("Kernelregression/Kernelregression.jl")
+    using .Kernelregression
     # using PyPlot
     # using ProgressMeter
     include("utils.jl")
