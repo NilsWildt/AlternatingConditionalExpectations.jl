@@ -10,7 +10,7 @@ K(x,y) = exp(-1/sigma^2 cdot ||x-y||^2)
 scaling factor ``sigma``.
 """
 
-mutable struct Gaussian{T <: Real} <: Kernel
+mutable struct Gaussian{T <: Real} <: SKernel
     "Scaling"
     σ::T
 end

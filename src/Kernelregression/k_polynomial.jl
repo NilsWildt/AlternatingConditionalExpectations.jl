@@ -8,7 +8,7 @@ K(x,y) = ((x,y) + a)^p
 (.,.) inner product, additive constant ``a``, and degree ``p``.
 """
 
-mutable struct Polynomial{T <: Real} <: Kernel
+mutable struct Polynomial{T <: Real} <: SKernel
     "Constant"
     a::T
     "Polynomial degree"

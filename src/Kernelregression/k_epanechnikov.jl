@@ -10,7 +10,7 @@ K(x,y) =
 scaling factor ``sigma``.
 """
 
-mutable struct Epanechnikov <: Kernel
+mutable struct Epanechnikov <: SKernel
     "Scaling"
     σ::Float64 # Überbleibsel
 end

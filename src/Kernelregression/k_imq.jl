@@ -8,7 +8,7 @@ K(x,y) = sqrt()
 scaling factor ``sigma``.
 """
 
-mutable struct Imq{T <: Real} <: Kernel
+mutable struct Imq{T <: Real} <: SKernel
     "Scaling"
     σ::T
 end

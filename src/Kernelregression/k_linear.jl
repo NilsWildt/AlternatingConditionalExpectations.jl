@@ -7,7 +7,7 @@ K(x,y) = (x,y)
 ```
 (.,.) is the inner product. No offset --> affine.
 """
-struct Linear <: Kernel
+struct Linear <: SKernel
     calc_bias::Bool
 end
 
