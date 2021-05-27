@@ -1,5 +1,4 @@
 # include("Kernelregression/Kernelregression.jl")
-using .Kernelregression
 using Interpolations 
 using DocStringExtensions
 using ImageFiltering
