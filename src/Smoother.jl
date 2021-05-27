@@ -390,7 +390,7 @@ Base.String(k::LLSSb) = "Smoothed_LLSSb($(2 * k.k + 1))"
 
 mutable struct Kernelsmooth <: Smoother
     reg::Float64
-    smoothk::Kernel
+    smoothk::ACE.Kernel
 end
 
 
@@ -419,7 +419,7 @@ end
 
 
 mutable struct NWKernelsmooth <: Smoother
-    smoothk::Kernel
+    smoothk::ACE.Kernel
 end
 
 function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::NWKernelsmooth) 
