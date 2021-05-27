@@ -85,7 +85,7 @@ end
         Ny = length(y)
     LASbvals =  zeros(Float64, (Ny))
     tkernel = centered(ones(k))
-    LASbvals = imfilter(y, tkernel,  "symmetric")
+    LASbvals = imfilter(y, tkernel,  "symmetric")./k
     return LASbvals
 end
 
