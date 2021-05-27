@@ -5,7 +5,7 @@ module ACE
 # Base.Experimental.@optlevel 3
     # abstract type ACEsim end
     abstract type Smoother end
-    export Smoother,run , ACEsim,generate_bivariate_data,   do_smoothing, guess_parameters!,ε², stoch_normalize,do_smoothing_old
+    export Smoother,run , ACEsim,generate_bivariate_data, do_smoothing, guess_parameters!,ε², stoch_normalize, do_smoothing_old
     # using PkgTemplates
     # t = Template(; user = "nildt", disable_defaults = [Git])
     using Random
