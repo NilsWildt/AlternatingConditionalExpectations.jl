@@ -42,15 +42,15 @@ end
 #     end
 # end
 
-# @fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LAS)
-#     k = smoother.k
-#     Ny = length(y)
-#     LASvals =  zeros(Float64, Ny)
-#     @inbounds @simd for i in 1:Ny
-#         LASvals[i] =  sum(@views  y[max(i - k, 1):min(i + k, Ny)])
-#     end
-#     return LASvals ./Ny
-# end
+@fastmath function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LAS)
+    k = smoother.window
+    Ny = length(y)
+    LASvals =  zeros(Float64, Ny)
+    @inbounds @simd for i in 1:Ny
+        LASvals[i] =  sum(@views  y[max(i - k, 1):min(i + k, Ny)])
+    end
+    return LASvals ./Ny
+end
 
 # Base.String(k::LAS) = "Smoothed_LAS($(2 * k.k + 1))"
 @fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LAS)
