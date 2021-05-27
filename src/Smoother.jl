@@ -47,22 +47,16 @@ end
     Ny = length(y)
     LASvals =  zeros(Float64, Ny)
     @inbounds @simd for i in 1:Ny
-        LASvals[i] =  sum(@views  y[max(i - k, 1):min(i + k, Ny)])
+        LASvals[i] =  mean(@views  y[max(i - k, 1):min(i + k, Ny)])
     end
-    return LASvals ./Ny
+    return LASvals
 end
 
 # Base.String(k::LAS) = "Smoothed_LAS($(2 * k.k + 1))"
 @fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LAS)
     window = smoother.window
-    # Ny = length(y)
    LASvals =  mapwindow(mean, y, window) 
-
-    # LASvals =  zeros(Float64, Ny)
-    # @inbounds @simd for i in 1:Ny
-    #     LASvals[i] =  sum(@views  y[max(i - k, 1):min(i + k, Ny)])
-    # end
-    return LASvals #./Ny
+    return LASvals
 end
 
 Base.String(k::LAS) = "Smoothed_LAS($(2 * k.k + 1))"
@@ -72,8 +66,12 @@ mutable struct LASb <: Smoother
     k::Int64
 end
 
-@fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LASb) 
-    k = smoother.k
+
+
+
+
+@fastmath function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LASb) 
+    k = smoother.window
     Ny = length(y)
     LASbvals =  zeros(Float64, (Ny))
     @inbounds  for i in eachindex(y)
@@ -83,6 +81,18 @@ end
     end
     return LASbvals
 end
+
+
+@fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LASb) 
+    k = smoother.window
+        Ny = length(y)
+    LASbvals =  zeros(Float64, (Ny))
+    tkernel = centered(ones(k))
+    imfilter!(LASbvals,y, tkernel,  "symmetric")
+    return LASbvals
+end
+
+
 
 Base.String(k::LASb) = "Smoothed_LASb($(2 * k.k + 1))"
 
