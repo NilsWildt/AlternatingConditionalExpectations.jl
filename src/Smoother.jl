@@ -3,6 +3,7 @@ using Interpolations
 using DocStringExtensions
 using ImageFiltering
 using StatsBase
+using LinearAlgebra
 # using LocalFilters
 Base.Experimental.@optlevel 3   
 
@@ -42,7 +43,7 @@ end
 #     end
 # end
 
-@fastmath function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LAS)
+@fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LAS)
     k = smoother.window
     Ny = length(y)
     LASvals =  zeros(Float64, Ny)
@@ -53,11 +54,11 @@ end
 end
 
 # Base.String(k::LAS) = "Smoothed_LAS($(2 * k.k + 1))"
-@fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LAS)
-    window = smoother.window
-   LASvals =  mapwindow(mean, y, window) 
-    return LASvals
-end
+# @fastmath function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LAS)
+#     window = smoother.window
+#    LASvals =  mapwindow(mean, y, window) 
+#     return LASvals
+# end
 
 Base.String(k::LAS) = "Smoothed_LAS($(2 * k.k + 1))"
 
@@ -67,29 +68,28 @@ mutable struct LASb <: Smoother
 end
 
 
-@fastmath function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LASb) 
+@fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LASb) 
     k = smoother.window
     Ny = length(y)
     LASbvals =  zeros(Float64, (Ny))
-    @inbounds  for i in eachindex(y)
+    @inbounds @simd  for i in eachindex(y)
         ind_low =  max(i - k, 1) - min(0, Ny - i - k + 1):i 
         ind_high =  i + 1:min(i + k, Ny) + min(0, i - k)
-        l = length(ind_low) +  length(ind_high)
         LASbvals[i]  =    sum(@views y[ind_low]) + sum(@views y[ind_high]) 
-        LASbvals[i] = LASbvals[i]/l
+        LASbvals[i] = LASbvals[i]/(length(ind_low) +  length(ind_high))
     end
     return LASbvals
 end
 
 
-@fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LASb) 
-    k = smoother.window
-    Ny = length(y)
-    LASbvals =  zeros(Float64, (Ny))
-    tkernel = centered(ones(k))
-    LASbvals = imfilter(y, tkernel,  "reflect")./k
-    return LASbvals
-end
+# @fastmath function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LASb) 
+#     k = smoother.window
+#     Ny = length(y)
+#     LASbvals =  zeros(Float64, (Ny))
+#     tkernel = centered(ones(k))
+#     LASbvals = imfilter(y, tkernel,  "reflect")./k
+#     return LASbvals
+# end
 
 
 
@@ -191,7 +191,32 @@ function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LL
     return  LLSS_values
 end
 
+# Beautiful: https://discourse.julialang.org/t/efficient-way-of-doing-linear-regression/31232/28
+function linreg(x::AbstractVector{T}, y::AbstractVector{T}) where {T<:AbstractFloat}
+           (N = length(x)) == length(y) || throw(DimensionMismatch())
+           ldiv!(cholesky!(Symmetric([T(N) sum(x); zero(T) sum(abs2, x)], :U)), [sum(y), dot(x, y)])
+end
+
+
 @fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSS) 
+    k = smoother.k
+    Ny = length(y)
+    LLSS_values =  zeros(Float64, Ny)
+       xm = mean(x[ind])
+        ym = mean(y[ind])   
+        # Start at the leftmost point...
+    @inbounds for i = Base.OneTo(Ny)
+        ind = max(i - k, 1):min(i + k, Ny)
+        # Nind = length(ind)
+        β = linreg(x[ind],y[ind])
+        α = ym .- β' * xm
+        LLSS_values[i] = α .+ β .* x[i]
+    end
+
+    return  LLSS_values
+end
+
+@fastmath function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSS) 
     k = smoother.k
     Ny = length(y)
     LLSS_values =  zeros(Float64, Ny)
@@ -200,14 +225,14 @@ end
     V = 0.0
    
         # Start at the leftmost point...
-    @inbounds @simd for i = Base.OneTo(Ny)
+    @inbounds for i = Base.OneTo(Ny)
         ind = max(i - k, 1):min(i + k, Ny)
-        Nind = length(ind)
+        # Nind = length(ind)
         xm = mean(x[ind])
         ym = mean(y[ind])
         C = 0.0
         V = 0.0
-        @inbounds   for si in ind
+        @inbounds  @simd   for si in ind
             C = C .+ (x[si] .- xm) * (y[si] .- ym)
             V = V .+ (x[si] .- xm).^2
         end
