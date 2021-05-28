@@ -101,8 +101,8 @@ Base.String(k::LASb) = "Smoothed_LASb($(2 * k.window + 1))"
 
 mutable struct LLSS <: Smoother
     window::Int64
-    function LLSS(k) 
-        new(_sanitize_k(k))
+    function LLSS(window) 
+        new(_sanitize_k(window))
     end
 end
 
@@ -262,8 +262,8 @@ Base.String(k::LLSS) = "Smoothed_LLSS($(2 * k.window + 1))"
 
 mutable struct LLSSb <: Smoother
     window::Int64
-    function LLSSb(k) 
-        new(_sanitize_k(k))
+    function LLSSb(window) 
+        new(_sanitize_k(window))
     end
 end
 
