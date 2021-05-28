@@ -475,11 +475,11 @@ Base.String(frss::FRSS) = "Smoothed_FRSS"
 
 function _sanitize_k(k)
     if typeof(k)!= Int64
-        @warn "Smoother bandwidth should be of type Int64. We round and cast it.  It was before of type: " typeof(k)
+        @debug "Smoother bandwidth should be of type Int64. We round and cast it.  It was before of type: " typeof(k)
     k =  Int64.(round.(k, digits = 0))
     end
     if iseven(k)
-        @warn "Smoother bandwidth should be odd. We added +1"
+        @debug "Smoother bandwidth should be odd. We added +1"
         k += 1
     end
     return k
