@@ -296,7 +296,7 @@ end
 
 # Smoothing in the smoother.k*2+1 box but calculating abs(y-smoothedvals) plus do LOOCV.
 function loocv(x::AbstractVecOrMat{Float64}, y::AbstractVecOrMat{Float64}, smoother::Smoother)
-    k = smoother.k
+    k = smoother.window
     # if !presorted
         # x, y =   _sanitizeinput(x, y)
     # end
