@@ -44,11 +44,12 @@ end
 # end
 
 @fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LAS)
-    k = smoother.window
+    window = smoother.window
+    window = Int64((window-1)/2)
     Ny = length(y)
     LASvals =  zeros(Float64, Ny)
     @inbounds @simd for i in 1:Ny
-        LASvals[i] =  mean(@views  y[max(i - k, 1):min(i + k, Ny)])
+        LASvals[i] =  mean(@views  y[max(i - window, 1):min(i + window, Ny)])
     end
     return LASvals
 end
@@ -60,7 +61,7 @@ end
 #     return LASvals
 # end
 
-Base.String(k::LAS) = "Smoothed_LAS($(2 * k.k + 1))"
+Base.String(k::LAS) = "Smoothed_LAS($(2 * k.window + 1))"
 
 
 mutable struct LASb <: Smoother
@@ -70,6 +71,7 @@ end
 
 @fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LASb) 
     k = smoother.window
+    k = Int64((k-1)/2)
     Ny = length(y)
     LASbvals =  zeros(Float64, (Ny))
     @inbounds @simd  for i in eachindex(y)
@@ -93,132 +95,124 @@ end
 
 
 
-Base.String(k::LASb) = "Smoothed_LASb($(2 * k.k + 1))"
+Base.String(k::LASb) = "Smoothed_LASb($(2 * k.window + 1))"
 
 ###
 
 mutable struct LLSS <: Smoother
-    k::Int64
+    window::Int64
     function LLSS(k) 
         new(_sanitize_k(k))
     end
 end
 
-function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSS) 
-    k = smoother.k
-    # if !presorted
-        # x, y =   _sanitizeinput(x, y)
-    # end
-    Nx = length(x)
-    Ny = length(y)
-    LLSS_values =  zeros(Float64, Nx)
+# @fastmath function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSS) 
+#     k = smoother.k
+#     # if !presorted
+#         # x, y =   _sanitizeinput(x, y)
+#     # end
+#     Nx = length(x)
+#     Ny = length(y)
+#     LLSS_values =  zeros(Float64, Nx)
     
-    C =  zeros(Float64, Nx)
-    V =  zeros(Float64, Nx)
-    α =  zeros(Float64, Nx)
-    β =  zeros(Float64, Nx)
+#     C =  zeros(Float64, Nx)
+#     V =  zeros(Float64, Nx)
+#     α =  zeros(Float64, Nx)
+#     β =  zeros(Float64, Nx)
     
-    # Start at the leftmost point...
-    ind = 2:k + 1 
+#     # Start at the leftmost point...
+#     ind = 2:k + 1 
     
-    xmean = mean(x[ind])
-    ymean = mean(y[ind])
-    C[1] = sum((x[ind] .- xmean) .* (y[ind] .- ymean))
-    V[1] = sum((x[ind] .- xmean).^2)
-    if V[1] == 0.0
-        β[1] = 0.0
-    else
-        β[1] = C[1] / V[1]
-    end
-    α[1] = -β[1] * xmean + ymean
-    LLSS_values[1] = α[1] + β[1] * x[1]
-    @inbounds @simd  for i in 2:Nx 
-        if (i <= k)# First we are adding points until we have 2k+1 points in total
-            indlow = 1:i - 1
-            indhigh = i:k + i 
-            xind = vcat(x[indlow], x[indhigh])
-            yind = vcat(y[indlow], y[indhigh])
-            m = length(ind)
-            xmean = mean(xind)
-            ymean = mean(yind)
-            C[i] = sum((xind .- xmean) .* (yind .- ymean))
-            V[i] = sum((xind .- xmean).^2)
-            if V[i] == 0.0
-                @warn "Probably some points are duplicated? Denominator becomes zero." i k 
-                β[i] = 0.0
-            else
-                β[i] = C[i] / V[i]
-            end
-            α[i] = -β[i] * xmean + ymean
-        elseif (i + k > Nx - 1) # Case "am Ende"
+#     xmean = mean(x[ind])
+#     ymean = mean(y[ind])
+#     C[1] = sum((x[ind] .- xmean) .* (y[ind] .- ymean))
+#     V[1] = sum((x[ind] .- xmean).^2)
+#     if V[1] == 0.0
+#         β[1] = 0.0
+#     else
+#         β[1] = C[1] / V[1]
+#     end
+#     α[1] = -β[1] * xmean + ymean
+#     LLSS_values[1] = α[1] + β[1] * x[1]
+#     @inbounds @simd  for i in 2:Nx 
+#         if (i <= k)# First we are adding points until we have 2k+1 points in total
+#             indlow = 1:i - 1
+#             indhigh = i:k + i 
+#             xind = vcat(x[indlow], x[indhigh])
+#             yind = vcat(y[indlow], y[indhigh])
+#             m = length(ind)
+#             xmean = mean(xind)
+#             ymean = mean(yind)
+#             C[i] = sum((xind .- xmean) .* (yind .- ymean))
+#             V[i] = sum((xind .- xmean).^2)
+#             if V[i] == 0.0
+#                 @warn "Probably some points are duplicated? Denominator becomes zero." i k 
+#                 β[i] = 0.0
+#             else
+#                 β[i] = C[i] / V[i]
+#             end
+#             α[i] = -β[i] * xmean + ymean
+#         elseif (i + k > Nx - 1) # Case "am Ende"
             
-            indlow = i - k:i - 1
-            indhigh = i:Nx
-            xind = @views vcat(x[indlow], x[indhigh])
-            yind = @views vcat(y[indlow], y[indhigh])
-            m = length(xind)
-            xmean = mean(xind)
-            ymean = mean(yind)
-            C[i] = sum((xind .- xmean) .* (yind .- ymean))
-            V[i] = sum((xind .- xmean).^2)
-            if V[i] == 0.0
-                @warn "Probably some points are duplicated? Denominator becomes zero." i k
-                β[i] = 0.0
-            else
-                β[i] = C[i] / V[i]
-            end
-            α[i] = -β[i] * xmean + ymean
-        else # Case einer dayzu, einer weg
-            indlow = i - k:i - 1
-            indhigh = i:i + k
-            xind = @views vcat(x[indlow], x[indhigh])
-            yind = @views vcat(y[indlow], y[indhigh])
-            xmean = mean(xind)
-            ymean = mean(yind)
-            C[i] = sum((xind .- xmean) .* (yind .- ymean))
-            V[i] = sum((xind .- xmean).^2)
-            if V[i] == 0.0
+#             indlow = i - k:i - 1
+#             indhigh = i:Nx
+#             xind = @views vcat(x[indlow], x[indhigh])
+#             yind = @views vcat(y[indlow], y[indhigh])
+#             m = length(xind)
+#             xmean = mean(xind)
+#             ymean = mean(yind)
+#             C[i] = sum((xind .- xmean) .* (yind .- ymean))
+#             V[i] = sum((xind .- xmean).^2)
+#             if V[i] == 0.0
+#                 @warn "Probably some points are duplicated? Denominator becomes zero." i k
+#                 β[i] = 0.0
+#             else
+#                 β[i] = C[i] / V[i]
+#             end
+#             α[i] = -β[i] * xmean + ymean
+#         else # Case einer dayzu, einer weg
+#             indlow = i - k:i - 1
+#             indhigh = i:i + k
+#             xind = @views vcat(x[indlow], x[indhigh])
+#             yind = @views vcat(y[indlow], y[indhigh])
+#             xmean = mean(xind)
+#             ymean = mean(yind)
+#             C[i] = sum((xind .- xmean) .* (yind .- ymean))
+#             V[i] = sum((xind .- xmean).^2)
+#             if V[i] == 0.0
 
-                @warn "Probably some points are duplicated? Denominator becomes zero." i k
-                β[i] = 0.0
-            else
-                β[i] = @views C[i] / V[i]
-            end
-            α[i] = -β[i] * xmean + ymean
-        end
-        LLSS_values[i] = @views α[i] + β[i] * x[i]
-    end
-    return  LLSS_values
-end
+#                 @warn "Probably some points are duplicated? Denominator becomes zero." i k
+#                 β[i] = 0.0
+#             else
+#                 β[i] = @views C[i] / V[i]
+#             end
+#             α[i] = -β[i] * xmean + ymean
+#         end
+#         LLSS_values[i] = @views α[i] + β[i] * x[i]
+#     end
+#     return  LLSS_values
+# end
 
-# Beautiful: https://discourse.julialang.org/t/efficient-way-of-doing-linear-regression/31232/28
-function linreg(x::AbstractVector{T}, y::AbstractVector{T}) where {T<:AbstractFloat}
-        
-end
-
+# @fastmath function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSS) 
+#     window = smoother.window
+#     Ny = length(y)
+#     LLSS_values =  zeros(Float64, Ny)
+#         # Start at the leftmost point...
+#     @inbounds   @simd   for i = Base.OneTo(Ny)
+#         ind = max(i - window, 1):min(i + window, Ny)
+#         β = ldiv!(cholesky!(Symmetric([Float64(length(ind)) sum(x[ind]); zero(Float64) sum(abs2, x[ind])], :U)), [sum(y[ind]), dot(x[ind],y[ind])])
+#         LLSS_values[i] = β[1] .+ β[2] .* x[i]
+#     end
+#     return  LLSS_values
+# end
 
 @fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSS) 
-    k = smoother.k
+    k = smoother.window
+    k = Int64((k-1)/2)
     Ny = length(y)
     LLSS_values =  zeros(Float64, Ny)
-        # Start at the leftmost point...
-    @inbounds   @simd   for i = Base.OneTo(Ny)
-        ind = max(i - k, 1):min(i + k, Ny)
-        β = ldiv!(cholesky!(Symmetric([Float64(length(ind)) sum(x[ind]); zero(Float64) sum(abs2, x[ind])], :U)), [sum(y[ind]), dot(x[ind],y[ind])])
-        LLSS_values[i] = β[1] .+ β[2] .* x[i]
-    end
-
-    return  LLSS_values
-end
-
-@fastmath function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSS) 
-    k = smoother.k
-    Ny = length(y)
-    LLSS_values =  zeros(Float64, Ny)
-    
     C = 0.0
     V = 0.0
-   
         # Start at the leftmost point...
     @inbounds for i = Base.OneTo(Ny)
         ind = max(i - k, 1):min(i + k, Ny)
@@ -233,17 +227,15 @@ end
         end
         β = C / V
         α = ym .- β' * xm
-        # @info "dbg" size(LLSS_values) α  β xm  LLSS_values[i]  (α .+ β .* x[i]) 
         LLSS_values[i] = α .+ β .* x[i]
     end
-
     return  LLSS_values
 end
 
 
 # Smoothing in the smoother.k*2+1 box but calculating abs(y-smoothedvals) plus do LOOCV.
 function loocv(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSS) 
-    k = smoother.k
+    k = smoother.window
     # if !presorted
         # x, y =   _sanitizeinput(x, y)
     # end
@@ -264,27 +256,49 @@ end
 
 
 
-Base.String(k::LLSS) = "Smoothed_LLSS($(2 * k.k + 1))"
+Base.String(k::LLSS) = "Smoothed_LLSS($(2 * k.window + 1))"
 
 ####
 
 mutable struct LLSSb <: Smoother
-    k::Int64
+    window::Int64
     function LLSSb(k) 
         new(_sanitize_k(k))
     end
 end
 
-
 function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSSb) 
-    k = smoother.k
- 
+    k = smoother.window
+    k = Int64((k-1)/2)
     # if !presorted
         # x, y =   _sanitizeinput(x, y)
     # end
     Ny = length(y)
     LLSSbvals =  zeros(Float64, Ny)
-    
+    @fastmath @inbounds @simd  for i in 1:Ny # @inbounds @simd 
+        indlow = max(i - k, 1) - min(0, Ny - i - k + 1):i - 1
+        indhigh = i:min(i + k, Ny) + min(0, i - k)
+        l = length(indlow) + length(indhigh)
+        xmean = (sum(x[indlow]) + sum(x[indhigh]))./l
+        ymean = (sum(y[indlow]) + sum(y[indhigh]))./l
+        
+        C = sum((xind .- xmean) .* (yind .- ymean))
+        V = sum((xind .- xmean).^2)
+        β = C / V
+        α = -β * xmean + ymean
+        LLSSbvals[i] = α + β * x[i]
+    end
+    return   LLSSbvals
+end
+
+function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSSb) 
+    k = smoother.window
+    k = Int64((k-1)/2)
+    # if !presorted
+        # x, y =   _sanitizeinput(x, y)
+    # end
+    Ny = length(y)
+    LLSSbvals =  zeros(Float64, Ny)
     @fastmath @inbounds @simd  for i in 1:Ny # @inbounds @simd 
         indlow = max(i - k, 1) - min(0, Ny - i - k + 1):i - 1
         indhigh = i:min(i + k, Ny) + min(0, i - k)
@@ -303,91 +317,91 @@ function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSSb)
 end
 
 
-function do_smoothing_slow(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSSb) 
-    k = smoother.k
+# function do_smoothing_slow(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSSb) 
+#     k = smoother.k
  
-    # if !presorted
-        # x, y =   _sanitizeinput(x, y)
-    # end
-    Ny = length(y)
-    LLSSbvals =  zeros(Float64, Ny)
+#     # if !presorted
+#         # x, y =   _sanitizeinput(x, y)
+#     # end
+#     Ny = length(y)
+#     LLSSbvals =  zeros(Float64, Ny)
     
-    @inbounds @simd  for i in 1:Ny # @inbounds @simd 
-        indlow = max(i - k, 1) - min(0, Ny - i - k + 1):i - 1
-        indhigh = i:min(i + k, Ny) + min(0, i - k)
-        xind = vcat(x[indlow], x[indhigh])
-        yind = vcat(y[indlow], y[indhigh])
+#     @inbounds @simd  for i in 1:Ny # @inbounds @simd 
+#         indlow = max(i - k, 1) - min(0, Ny - i - k + 1):i - 1
+#         indhigh = i:min(i + k, Ny) + min(0, i - k)
+#         xind = vcat(x[indlow], x[indhigh])
+#         yind = vcat(y[indlow], y[indhigh])
 
-        fxnew = lin_reg(xind, yind)
-        LLSSbvals[i] = fxnew(x[i])[1]
-    end
-    return  LLSSbvals
-end
+#         fxnew = lin_reg(xind, yind)
+#         LLSSbvals[i] = fxnew(x[i])[1]
+#     end
+#     return  LLSSbvals
+# end
 
 
-function do_smoothing_updating_bug(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSSb) 
-    k = smoother.k
-    Ny = length(y)
-    LLSSbvals =  zeros(Float64, Ny)
-    C = 0.0
-    V = 0.0
-    # Calculate first point manually
-    ind = 1:k + 1
-    Nind = length(ind)
-    xmean = mean(x[ind])
-    ymean = mean(y[ind])
-    @inbounds for i in ind
-        tmp1 = x[i] - xmean
-        C += (tmp1) * (y[i] - ymean)
-        V += tmp1^2
-    end
-    β = C / V
-    α = ymean - β * xmean
-    LLSSbvals[1] = α + β * x[1]
-    # Save first LLSS approximation
-   # Do the next points and distringuish boundary stuff
-        # Start at the 2nd point
-    @inbounds @simd for i = 2:Ny
-        if (i <= k + 1) # Add a "right" point
-            xm = (Nind * xmean + x[k + i]) / (Nind + 1)
-            ym = (Nind * ymean + y[k + i]) / (Nind + 1)
-            C += (Nind + 1) / Nind * (x[k + i] - xm) * (y[k + i] - ymean)
-            V += (Nind + 1) / Nind * (x[k + i] - xm)^2
-            Nind = Nind + 1
-            β = C / V
-            α = -β * xmean + ymean
-        elseif (k + 2 <= i && i <= Ny - k) # Add a "right" point, remove a "left" point
-            xmean = (Nind * xmean + x[k + i]) / (Nind + 1)
-            ymean = (Nind * ymean + y[k + i]) / (Nind + 1)
-            C += (Nind + 1) / Nind * (x[k + i] - xmean) * (y[k + i] - ymean)
-            V += (Nind + 1) / Nind * (x[k + i] - xmean)^2
-            Nind = Nind + 1
-            # Now the left one
-            C  -= Nind / (Nind - 1) * (x[i - k - 1] - xmean) * (y[i - k - 1]  - ymean);
-            V -=  Nind / (Nind - 1) * (y[i - k - 1] - xmean)^2;
-            xmean = (Nind * xmean - x[i - k - 1]) / (Nind - 1);
-            ymean = (Nind * ymean - y[i - k - 1]) / (Nind - 1);
-            Nind = Nind - 1
-            β = C / V
-            α = -β * xmean + ymean
-        elseif (Ny - k + 1 <= i  && i <= Ny)
-            C  -= Nind / (Nind - 1) * (x[i - k - 1] - xmean) * (y[i - k - 1]  - ymean);
-            V -=  Nind / (Nind - 1) * (y[i - k - 1] - xmean)^2;
-            xmean = (Nind * xmean - x[i - k - 1]) / (Nind - 1);
-            ymean = (Nind * ymean - y[i - k - 1]) / (Nind - 1);
+# function do_smoothing_updating_bug(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSSb) 
+#     k = smoother.k
+#     Ny = length(y)
+#     LLSSbvals =  zeros(Float64, Ny)
+#     C = 0.0
+#     V = 0.0
+#     # Calculate first point manually
+#     ind = 1:k + 1
+#     Nind = length(ind)
+#     xmean = mean(x[ind])
+#     ymean = mean(y[ind])
+#     @inbounds for i in ind
+#         tmp1 = x[i] - xmean
+#         C += (tmp1) * (y[i] - ymean)
+#         V += tmp1^2
+#     end
+#     β = C / V
+#     α = ymean - β * xmean
+#     LLSSbvals[1] = α + β * x[1]
+#     # Save first LLSS approximation
+#    # Do the next points and distringuish boundary stuff
+#         # Start at the 2nd point
+#     @inbounds @simd for i = 2:Ny
+#         if (i <= k + 1) # Add a "right" point
+#             xm = (Nind * xmean + x[k + i]) / (Nind + 1)
+#             ym = (Nind * ymean + y[k + i]) / (Nind + 1)
+#             C += (Nind + 1) / Nind * (x[k + i] - xm) * (y[k + i] - ymean)
+#             V += (Nind + 1) / Nind * (x[k + i] - xm)^2
+#             Nind = Nind + 1
+#             β = C / V
+#             α = -β * xmean + ymean
+#         elseif (k + 2 <= i && i <= Ny - k) # Add a "right" point, remove a "left" point
+#             xmean = (Nind * xmean + x[k + i]) / (Nind + 1)
+#             ymean = (Nind * ymean + y[k + i]) / (Nind + 1)
+#             C += (Nind + 1) / Nind * (x[k + i] - xmean) * (y[k + i] - ymean)
+#             V += (Nind + 1) / Nind * (x[k + i] - xmean)^2
+#             Nind = Nind + 1
+#             # Now the left one
+#             C  -= Nind / (Nind - 1) * (x[i - k - 1] - xmean) * (y[i - k - 1]  - ymean);
+#             V -=  Nind / (Nind - 1) * (y[i - k - 1] - xmean)^2;
+#             xmean = (Nind * xmean - x[i - k - 1]) / (Nind - 1);
+#             ymean = (Nind * ymean - y[i - k - 1]) / (Nind - 1);
+#             Nind = Nind - 1
+#             β = C / V
+#             α = -β * xmean + ymean
+#         elseif (Ny - k + 1 <= i  && i <= Ny)
+#             C  -= Nind / (Nind - 1) * (x[i - k - 1] - xmean) * (y[i - k - 1]  - ymean);
+#             V -=  Nind / (Nind - 1) * (y[i - k - 1] - xmean)^2;
+#             xmean = (Nind * xmean - x[i - k - 1]) / (Nind - 1);
+#             ymean = (Nind * ymean - y[i - k - 1]) / (Nind - 1);
    
-            Nind = Nind - 1
-            β = C / V
-            α = -β * xmean + ymean
-        else
-            @warn "Did I forget anything?!" i Ny k
-        end
-        LLSSbvals[i] = α + β * x[i]
+#             Nind = Nind - 1
+#             β = C / V
+#             α = -β * xmean + ymean
+#         else
+#             @warn "Did I forget anything?!" i Ny k
+#         end
+#         LLSSbvals[i] = α + β * x[i]
 
-    end
+#     end
 
-    return  LLSSbvals
-end
+#     return  LLSSbvals
+# end
 
 
 # Smoothing in the smoother.k*2+1 box but calculating abs(y-smoothedvals) plus do LOOCV.
@@ -413,7 +427,7 @@ function loocv(x::AbstractVecOrMat{Float64}, y::AbstractVecOrMat{Float64}, smoot
 end
 
 
-Base.String(k::LLSSb) = "Smoothed_LLSSb($(2 * k.k + 1))"
+Base.String(k::LLSSb) = "Smoothed_LLSSb($(2 * k.window + 1))"
 
 ##
 
@@ -572,10 +586,13 @@ Base.String(frss::FRSS) = "Smoothed_FRSS"
 # end
 
 function _sanitize_k(k)
-    @info "Made it to this file"
     if typeof(k)!= Int64
-        @warn "Smoother bandwidth should be of type Int64. We round and cast it.  It was beofre of type: " typeof(k)
+        @warn "Smoother bandwidth should be of type Int64. We round and cast it.  It was before of type: " typeof(k)
     k =  Int64.(round.(k, digits = 0))
+    end
+    if iseven(k)
+        @warn "Smoother bandwidth should be odd. We added +1"
+        k += 1
     end
     return k
 end
