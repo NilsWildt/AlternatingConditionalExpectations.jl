@@ -282,8 +282,8 @@ function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSSb)
         xmean = (sum(x[indlow]) + sum(x[indhigh]))./l
         ymean = (sum(y[indlow]) + sum(y[indhigh]))./l
         
-        C = sum((xind .- xmean) .* (yind .- ymean))
-        V = sum((xind .- xmean).^2)
+        C = sum((x[indlow] .- xmean) .* (y[indlow] .- ymean)) + sum((x[indhigh] .- xmean) .* (y[indhigh] .- ymean))
+        V = sum((x[indlow]  .- xmean).^2) + sum((x[indhigh]  .- xmean).^2)
         β = C / V
         α = -β * xmean + ymean
         LLSSbvals[i] = α + β * x[i]
