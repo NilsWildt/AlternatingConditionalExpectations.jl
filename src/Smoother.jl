@@ -207,7 +207,7 @@ end
         # Start at the leftmost point...
     @inbounds for i = Base.OneTo(Ny)
         ind = max(i - k, 1):min(i + k, Ny)
-         xm = mean(x[ind])
+        xm = mean(x[ind])
         ym = mean(y[ind])   
         # Nind = length(ind)
         β = linreg(x[ind],y[ind])
