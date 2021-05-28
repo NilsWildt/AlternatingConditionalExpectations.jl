@@ -82,10 +82,10 @@ end
 
 @fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LASb) 
     k = smoother.window
-        Ny = length(y)
+    Ny = length(y)
     LASbvals =  zeros(Float64, (Ny))
     tkernel = centered(ones(k))
-    LASbvals = imfilter(y, tkernel,  "symmetric")./k
+    LASbvals = imfilter(y, tkernel,  "reflect")./k
     return LASbvals
 end
 
