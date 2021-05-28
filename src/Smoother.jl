@@ -358,7 +358,6 @@ end
 function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::NWKernelsmooth) 
     # x, y =   _sanitizeinput(x, y)
     Nx = length(x)
-    Ny = length(y)
    
     m(a, b) =  Kernelregression.evalKernel(smoother.smoothk, a .- b)
     retval = zeros(size(x))
@@ -366,7 +365,7 @@ function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::NWKern
         tmp = m(x[i], x)
         retval[i] = mean((tmp ./ mean(tmp)) .* y)
     end
-    return    SArray{Tuple{Nx}}(retval)
+    return   retval
 end
 
 function Base.String(ks::NWKernelsmooth)
