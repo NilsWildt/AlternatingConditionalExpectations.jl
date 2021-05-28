@@ -203,16 +203,12 @@ end
     k = smoother.k
     Ny = length(y)
     LLSS_values =  zeros(Float64, Ny)
-    
         # Start at the leftmost point...
     @inbounds for i = Base.OneTo(Ny)
         ind = max(i - k, 1):min(i + k, Ny)
-        xm = mean(x[ind])
-        ym = mean(y[ind])   
         # Nind = length(ind)
         β = linreg(x[ind],y[ind])
-        α = ym .- β' * xm
-        LLSS_values[i] = α .+ β .* x[i]
+        LLSS_values[i] = β [1] .+ β[2] .* x[i]
     end
 
     return  LLSS_values
