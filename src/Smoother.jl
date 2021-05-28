@@ -208,7 +208,7 @@ end
         ind = max(i - k, 1):min(i + k, Ny)
         # Nind = length(ind)
         β = linreg(x[ind],y[ind])
-        LLSS_values[i] = β [1] .+ β[2] .* x[i]
+        LLSS_values[i] = β[1] .+ β[2] .* x[i]
     end
 
     return  LLSS_values
