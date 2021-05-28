@@ -75,7 +75,7 @@ end
         ind_low =  max(i - k, 1) - min(0, Ny - i - k + 1):i 
         ind_high =  i + 1:min(i + k, Ny) + min(0, i - k)
         l = length(ind_low) +  length(ind_high)
-        LASbvals[i]  =    sum(y[ind_low]) + sum(y[ind_high]) 
+        LASbvals[i]  =    sum(@views y[ind_low]) + sum(@views y[ind_high]) 
         LASbvals[i] = LASbvals[i]/l
     end
     return LASbvals
