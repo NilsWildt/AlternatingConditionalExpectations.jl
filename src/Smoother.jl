@@ -193,9 +193,7 @@ end
 
 # Beautiful: https://discourse.julialang.org/t/efficient-way-of-doing-linear-regression/31232/28
 function linreg(x::AbstractVector{T}, y::AbstractVector{T}) where {T<:AbstractFloat}
-        N = length(x)
-           N  == length(y) || throw(DimensionMismatch())
-           ldiv!(cholesky!(Symmetric([T(N) sum(x); zero(T) sum(abs2, x)], :U)), [sum(y), dot(x, y)])
+        
 end
 
 
@@ -204,10 +202,9 @@ end
     Ny = length(y)
     LLSS_values =  zeros(Float64, Ny)
         # Start at the leftmost point...
-    @inbounds for i = Base.OneTo(Ny)
+    @inbounds   @simd   for i = Base.OneTo(Ny)
         ind = max(i - k, 1):min(i + k, Ny)
-        # Nind = length(ind)
-        β = linreg(x[ind],y[ind])
+        β = ldiv!(cholesky!(Symmetric([Float64(length(ind)) sum(x[ind]); zero(Float64) sum(abs2, x[ind])], :U)), [sum(y[ind]), dot(x[ind],y[ind])])
         LLSS_values[i] = β[1] .+ β[2] .* x[i]
     end
 
