@@ -334,8 +334,9 @@ end
                             # ylims:= plot_view_bounds[2][2]
                     subplot := n+1+i
                         X[:,i],Φ_x[:,i]
+                     Φ_x = Φ_candidate 
                 end
-            end
+                     Φ_x = Φ_candidate 
 
             # Last row
             for i in 1:Int64(n)
