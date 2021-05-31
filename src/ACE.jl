@@ -194,18 +194,15 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
     Θ_y = stoch_normalize(copy(Y))
     Θ_candidate = copy(Θ_y)
 
-    Φ_x =  copy(X)# zeros(Float64, Nx, m_parameter) # zeros(Float64, Nx, m_parameter) # Start with zeros
+    Φ_x = copy(X)
     for i in 1:m_parameter
         Φ_x[:,i] .=   Φ_x[:,i] .- mean(Φ_x[:,i])
     end
-    Φ_candidate = copy(Φ_x)
+    Φ_candidate = 0.0 .* copy(Φ_x)
 
-    itermax_outer = myace.itermax_outer
-    itermax_inner = myace.itermax_inner
+
     e_old = Inf64
     e_new =  ε²(Θ_y, Φ_x)
-    errorbound =    myace.errorbound 
-
 
     conv_err = []
     totalcount = 0
@@ -214,29 +211,27 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
         j = 1
         while (abs(e_old - e_new) > myace.errorbound || j < 2) && j <= myace.itermax_inner
             e_old = e_new
+            Φ_candidate .= 0.0 .* Φ_candidate
             @inbounds for k in 1:m_parameter
                 Φ_candidate[:,k] = 𝔼_conditional(Θ_y .- sum_without(Φ_candidate, k), X,  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
                 Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
-            end
-            Φ_x = Φ_candidate 
+           end
             e_new =  ε²(Θ_y, Φ_candidate)
             @debug "Inner loop" (e_old - e_new )  i j
             push!(conv_err, abs(e_old - e_new))
             j += 1
             totalcount  += 1
         end
-        Φ_x = Φ_candidate  # Not sure, if I want this, depends on the error I suppose.
+        Φ_x = Φ_candidate
         e_old = e_new;
         Θ_candidate  = 𝔼_conditional(sum(Φ_x, dims = 2), Y, myace, sIy, bsIy) 
         Θ_candidate  = stoch_normalize(Θ_candidate)
-        Θ_y .=  Θ_candidate
         i += 1
         e_new =  ε²(Θ_candidate, Φ_x)
         @debug "outer loop" (e_old - e_new ) i j
         push!(conv_err, abs(e_old - e_new))
     end
       Θ_y .=  Θ_candidate
-
     r_orig =cor(X, Y)
     r² = cor(Φ_x, Θ_y)
     # spearman_orig = StatsBase.corspearman(vec(X), vec(Y))
@@ -334,9 +329,8 @@ end
                             # ylims:= plot_view_bounds[2][2]
                     subplot := n+1+i
                         X[:,i],Φ_x[:,i]
-                     Φ_x = Φ_candidate 
                 end
-                     Φ_x = Φ_candidate 
+            end
 
             # Last row
             for i in 1:Int64(n)
