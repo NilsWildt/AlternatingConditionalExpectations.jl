@@ -176,6 +176,7 @@ end
     return (X  .- tmpmean) ./ std(X; corrected = true, mean = tmpmean)
 end
 
+
 function sum_without(X::AbstractArray, k::Int64)
     @fastmath return sum(X[:,1:k - 1], dims = 2) + sum(X[:,k + 1:end], dims = 2)
 end
