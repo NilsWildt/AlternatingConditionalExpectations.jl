@@ -153,7 +153,7 @@ function RMSE(Ytrue::Array{Float64}, Yestimated::Array{Float64})::Float64
 end
 
 
-function  AARD(Y::Array{Float64}, X::AbstractMatrix)::Float64
+function  AARD(Y, X)::Float64
     return 100.0 ./length(X) * sum(abs.(X.-Y)./Y)
 end
 
