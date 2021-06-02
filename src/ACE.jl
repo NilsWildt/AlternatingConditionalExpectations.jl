@@ -76,7 +76,7 @@ end
     "Max iterations"
     itermax_outer::Int64
     "Fresh start"
-    multiloopversion::Symbol # :fresh :restart ## Both types
+    multiloopversion::Symbol # :fresh :reuse ## Both types
 end
 
 ACEsim(X::S, Y::S, smoother::T, errorbound::Float64 = 1E-4,  itermax_inner::Int64 = 50, itermax_outer::Int64 = 500, multiloopversion::Symbol=:fresh)   where  {T,S} = ACEsim{T,S}(X, Y, smoother, errorbound, itermax_inner, itermax_outer,multiloopversion)
@@ -219,7 +219,7 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
                 Φ_candidate .= 0.0 .* Φ_candidate
             end
             @inbounds for k in 1:m_parameter
-                Φ_candidate[:,k] = 𝔼_conditional(Θ_y .- sum_without(Φ_candidate, k), X,  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
+                Φ_candidate[:,k] = 𝔼_conditional(Θ_candidate .- sum_without(Φ_candidate, k), X,  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
                 Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
            end
             e_new =  ε²(Θ_y, Φ_candidate)
