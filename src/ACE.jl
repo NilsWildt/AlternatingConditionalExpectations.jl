@@ -211,10 +211,10 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
     conv_err = []
     totalcount = 0
     i = 1
-    while (abs(e_old - e_new) > myace.errorbound)  && i <= myace.itermax_outer
+    while (e_old>e_new)  && i <= myace.itermax_outer # abs(e_old - e_new) > myace.errorbound
         j = 1
         Θ_y =  Θ_candidate
-        while (abs(e_old - e_new) > myace.errorbound ) && j <= myace.itermax_inner
+        while ( e_old>e_new) && j <= myace.itermax_inner#abs(e_old - e_new) > myace.errorbound
             e_old = e_new
             if myace.multiloopversion==:fresh
                 Φ_candidate .= 0.0 .* Φ_candidate
