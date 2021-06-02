@@ -215,12 +215,13 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
         j = 1
         Θ_y =  Θ_candidate
         while (abs(e_old - e_new) > myace.errorbound ) && j <= myace.itermax_inner
+              Φ_x = Φ_candidate
             e_old = e_new
             if myace.multiloopversion==:fresh
                 Φ_candidate .= 0.0 .* Φ_candidate
             end
             @inbounds for k in 1:m_parameter
-                Φ_candidate[:,k] = 𝔼_conditional(Θ_y .- sum_without(Φ_candidate, k), X,  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
+                Φ_candidate[:,k] = 𝔼_conditional(Θ_y .- sum_without(Φ_x, k), X,  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
                 Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
            end
             e_new =  ε²(Θ_y, Φ_candidate)
