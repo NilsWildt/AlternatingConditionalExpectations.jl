@@ -36,11 +36,11 @@ module ACE
 
     # pygui(true)
 
-@with_kw struct ACEres{S<:AbstractArray}
-    X::S 
-    Y::S 
-    Φ_x::S
-    Θ_y::S
+@with_kw struct ACEres
+    X::AbstractArray 
+    Y::AbstractArray 
+    Φ_x::AbstractArray
+    Θ_y::AbstractArray
     sIx::AbstractArray
     sIy::AbstractArray
     bsIx::AbstractArray
@@ -237,7 +237,7 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
         @debug "outer loop" (e_old - e_new ) i j
         push!(conv_err, abs(e_old - e_new))
     end
-    Θ_y =  Array{Float64, 2}(Θ_candidate)
+    Θ_y =  Θ_candidate
     r_orig =cor(X, Y)
     r² = cor(Φ_x, Θ_y)
     # spearman_orig = StatsBase.corspearman(vec(X), vec(Y))
