@@ -237,7 +237,7 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
         @debug "outer loop" (e_old - e_new ) i j
         push!(conv_err, abs(e_old - e_new))
     end
-    Θ_y =  Θ_candidate
+    Θ_y =  Array{Float64, 2}(Θ_candidate)
     r_orig =cor(X, Y)
     r² = cor(Φ_x, Θ_y)
     # spearman_orig = StatsBase.corspearman(vec(X), vec(Y))
