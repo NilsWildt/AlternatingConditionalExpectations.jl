@@ -61,6 +61,7 @@ module ACE
     description::String="ACE_simulation_result"
 end
 
+
  struct ACEsim{T,S <: AbstractArray}
     "X data"
     X::S
@@ -74,9 +75,11 @@ end
     itermax_inner::Int64
     "Max iterations"
     itermax_outer::Int64
+    "Fresh start"
+    multiloopversion::Symbol # :fresh :restart ## Both types
 end
 
-ACEsim(X::S, Y::S, smoother::T, errorbound::Float64 = 1E-4,  itermax_inner::Int64 = 50, itermax_outer::Int64 = 500)   where  {T,S} = ACEsim{T,S}(X, Y, smoother, errorbound, itermax_inner, itermax_outer)
+ACEsim(X::S, Y::S, smoother::T, errorbound::Float64 = 1E-4,  itermax_inner::Int64 = 50, itermax_outer::Int64 = 500, multiloopversion::Symbol=:fresh)   where  {T,S} = ACEsim{T,S}(X, Y, smoother, errorbound, itermax_inner, itermax_outer,multiloopversion)
 
 
 function get_sortidx(X::T where T <:  AbstractArray)::Tuple{Vector{Int64},Vector{Int64}}
@@ -207,11 +210,13 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
     conv_err = []
     totalcount = 0
     i = 1
-    while (abs(e_old - e_new) > myace.errorbound || i < 2)  && i <= myace.itermax_outer
+    while (abs(e_old - e_new) > myace.errorbound)  && i <= myace.itermax_outer
         j = 1
-        while (abs(e_old - e_new) > myace.errorbound || j < 2) && j <= myace.itermax_inner
+        while (abs(e_old - e_new) > myace.errorbound ) && j <= myace.itermax_inner
             e_old = e_new
-            Φ_candidate .= 0.0 .* Φ_candidate
+            if myace.multiloopversion==:fresh
+                Φ_candidate .= 0.0 .* Φ_candidate
+            end
             @inbounds for k in 1:m_parameter
                 Φ_candidate[:,k] = 𝔼_conditional(Θ_y .- sum_without(Φ_candidate, k), X,  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
                 Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
@@ -231,7 +236,7 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
         @debug "outer loop" (e_old - e_new ) i j
         push!(conv_err, abs(e_old - e_new))
     end
-      Θ_y .=  Θ_candidate
+    Θ_y =  Θ_candidate
     r_orig =cor(X, Y)
     r² = cor(Φ_x, Θ_y)
     # spearman_orig = StatsBase.corspearman(vec(X), vec(Y))
