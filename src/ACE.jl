@@ -178,9 +178,10 @@ end
 
 
 function sum_without(X::AbstractArray, k::Int64)
-    if k == 1
+    sx = size(X,2)
+    if k == 1 && sx>1
     @fastmath return sum(X[:,2:end], dims = 2)
-    elseif k == size(X,2)
+    elseif k == sx && k>1
             @fastmath return sum(X[:,1:k-1], dims = 2)
     else 
     @fastmath return sum(X[:,1:k - 1], dims = 2) + sum(X[:,k + 1:end], dims = 2)
