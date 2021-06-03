@@ -66,12 +66,15 @@ Base.String(k::LAS) = "Smoothed_LAS($(2 * k.window + 1))"
 
 mutable struct LASb <: Smoother
     window::Int64
+       function LASb(window) 
+        new(_sanitize_k(window))
+    end
 end
 
 
 @fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LASb) 
     k = smoother.window
-    k = Int64((k-1)/2)
+    k = Int64(ceil((k-1)/2))
     Ny = length(y)
     LASbvals =  zeros(Float64, (Ny))
     @inbounds @simd  for i in eachindex(y)
@@ -208,7 +211,7 @@ end
 
 @fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSS) 
     k = smoother.window
-    k = Int64((k-1)/2)
+    k = Int64(ceil((k-1)/2))
     Ny = length(y)
     LLSS_values =  zeros(Float64, Ny)
     C = 0.0
@@ -269,7 +272,7 @@ end
 
 function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSSb) 
     k = smoother.window
-    k = Int64((k-1)/2)
+    k = Int64(ceil((k-1)/2))
     # if !presorted
         # x, y =   _sanitizeinput(x, y)
     # end
