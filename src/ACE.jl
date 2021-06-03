@@ -180,13 +180,13 @@ end
 function sum_without(X::AbstractArray, k::Int64)
     sx = size(X,2)
     if k == 1 && sx>1
-    @fastmath return sum(@views X[:,2:sx], dims = 2)
+   return sum( X[:,2:sx], dims = 2)
     elseif k == sx && k>1
-            @fastmath return sum(@views X[:,1:k-1], dims = 2)
+           return sum( X[:,1:k-1], dims = 2)
     elseif k==1 && sx==1 # Need to return zero vector in the 1 response, one predictor case
-        return 0.0.*similar(X[:,1])
+        return 0.0 .* similar(X[:,1])
     else
-    @fastmath return sum(@views X[:,1:k - 1], dims = 2) + sum(@views X[:,k + 1:sx], dims = 2)
+   return sum( X[:,1:k - 1], dims = 2) + sum( X[:,k + 1:sx], dims = 2)
     end
 end
 
