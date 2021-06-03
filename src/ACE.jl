@@ -180,11 +180,13 @@ end
 function sum_without(X::AbstractArray, k::Int64)
     sx = size(X,2)
     if k == 1 && sx>1
-    @fastmath return sum(X[:,2:end], dims = 2)
+    @fastmath return sum(@views X[:,2:end], dims = 2)
     elseif k == sx && k>1
-            @fastmath return sum(X[:,1:k-1], dims = 2)
-    else 
-    @fastmath return sum(X[:,1:k - 1], dims = 2) + sum(X[:,k + 1:end], dims = 2)
+            @fastmath return sum(@views X[:,1:k-1], dims = 2)
+    elseif k==1 && sx==1 # Need to return zero vector in the 1 response, one predictor case
+        return 0.0.*similar(X[:,1])
+    end
+    @fastmath return sum(@views X[:,1:k - 1], dims = 2) + sum(@views X[:,k + 1:end], dims = 2)
     end
 end
 
@@ -228,7 +230,7 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
             end
               Φ_x = Φ_candidate
             @inbounds for k in 1:m_parameter
-                Φ_candidate[:,k] = 𝔼_conditional(Θ_y .- sum_without(Φ_x, k), X,  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
+                Φ_candidate[:,k] = 𝔼_conditional(Θ_y .- sum_without(Φ_x, k), X[:,k],  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
                 Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
            end
             e_new =  ε²(Θ_y, Φ_candidate)
