@@ -211,7 +211,7 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
     for i in 1:m_parameter
         Φ_x[:,i] .=   Φ_x[:,i] .- mean(Φ_x[:,i])
     end
-    Φ_candidate = 0.0 .* copy(Φ_x)
+    Φ_candidate = copy(Φ_x)
 
 
     e_old = Inf64
@@ -225,8 +225,8 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
         Θ_y =  Θ_candidate
         while ( abs(e_old - e_new) > myace.errorbound ) && j <= myace.itermax_inner#
             e_old = e_new
-            if myace.multiloopversion==:fresh
-                Φ_candidate .= 0.0 .* Φ_candidate
+            if myace.multiloopversion==:fresh # Opposed to "reuse"
+                Φ_candidate .= 0.0  .* Φ_candidate
             end
               Φ_x = Φ_candidate
             @inbounds for k in 1:m_parameter
