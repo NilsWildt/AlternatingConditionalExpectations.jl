@@ -154,7 +154,7 @@ end
 
 
 function  AARD(Y, X)::Float64
-    return 100.0 ./length(X) * sum(abs.(X.-Y)./Y)
+    return 100.0 ./length(X) * sum(abs.(X.-Y)./abs.(Y))
 end
 
 
@@ -248,7 +248,7 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
         @debug "outer loop" (e_old - e_new ) i j
         push!(conv_err, abs(e_old - e_new))
     end
-    r_orig =cor(X, Y)
+    r_orig = cor(myace.X, myace.Y)
     r² = cor(Φ_x, Θ_y)
     # spearman_orig = StatsBase.corspearman(vec(X), vec(Y))
     # spearman_r² = StatsBase.corspearman(vec(Φ_x), vec(Θ_y))
