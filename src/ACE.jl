@@ -248,6 +248,9 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
         @debug "outer loop" (e_old - e_new ) i j
         push!(conv_err, abs(e_old - e_new))
     end
+    if any(isnan.(Φ_x)) || any(isnan.(Θ_y))
+        error("NaNs occured in either Phi or Theta.")
+    end
     r_orig = cor(myace.X, myace.Y)
     r² = cor(Φ_x, Θ_y)
     # spearman_orig = StatsBase.corspearman(vec(X), vec(Y))
