@@ -268,7 +268,7 @@ end
 
 
 # Plot recipie.
-@recipe function f(bf::ACEres;transform=false, full=false,dpi=250,plotsize=1. .*(1200,450))
+@recipe function f(bf::ACEres;transform=false, full=true,dpi=500,plotsize=2. .*(1200,450))
 #       if length(bf.X) == 0  || !(typeof(bf.X) <: AbstractVector) ||
 #         !(typeof(bf.Φ_x) <: AbstractVector)
 #         error("Benchmark has wrong dimensions, or ACE solution wasn't set yet.  Got: $(typeof(bf))")
@@ -290,7 +290,7 @@ end
             Θ_y = bf.Θ_y
 
             # remove nan:
-
+            
             X[isnan.(X)] .= 0.0 #  -Inf64
             Y[isnan.(Y)] .= 0.0 #  -Inf64
             Φ_x[isnan.(Φ_x)] .= 0.0 #  -Inf64
@@ -315,7 +315,7 @@ end
                 markerstrokewidth := 0
                 e2 = string(round(abs((ε²(Φ_x[bf.sIx], Θ_y[bf.sIy])));digits = 4))
                @show bf
-                 mytit = join(["\nACE result:\n","eps2 = $e2 "])
+                 mytit = join(["\nACE result:\n","ε² = $e2 "])
                 title:= mytit
            
               @series begin
@@ -343,7 +343,7 @@ end
                             seriestype := :scatter
                     title:=""
                          xlabel --> "X"
-                ylabel --> "Phi(X$i)"
+                ylabel --> "Φ(X$i)"
                     # xlims := plot_view_bounds[2][1]
                             # ylims:= plot_view_bounds[2][2]
                     subplot := n+1+i
@@ -355,8 +355,8 @@ end
             for i in 1:Int64(n)
                            @series begin
                     title:=""
-                xlabel --> "Phi(X$i)"
-                ylabel --> "Theta(Y)"
+                xlabel --> "Φ(X$i)"
+                ylabel --> L"\Theta(Y)"
                                         # xlims := plot_view_bounds[4][1]
                             # ylims:= plot_view_bounds[4][2]
                     subplot := 2*n+1+i
@@ -369,7 +369,7 @@ end
                            @series begin
                     title:=""
                 xlabel --> "Y"
-                ylabel --> "Theta(Y)"
+                ylabel --> L"\Theta(Y)"
                         #    xlims := plot_view_bounds[3][1]
                             # ylims:= plot_view_bounds[3][2]
                     subplot := 3*n+1+1
@@ -383,7 +383,7 @@ end
                                             markersize  := 3
                     title:=""
                 xlabel --> "Iterations"
-                ylabel --> "eps"
+                ylabel --> "ε"
                 subplot := 3*n+1+1+1
                  Array{Float64}(collect( 1:length(bf.conv_err))),   Array{Float64}(bf.conv_err)
                 end
