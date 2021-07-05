@@ -141,13 +141,7 @@ end
     Y = Y[sindx]
     smoother = myace.smoother
     # @infiltrate
-    sol =  do_smoothing(copy(X), copy(Y), smoother)[bindx]
-    
-if any(isnan.(sol))
-      @infiltrate
-      @error "WTF and why?"
-     end
-    # Scope?
+    sol =  do_smoothing(X,Y, smoother)[bindx]
     Y = Y[bindx]
     X = X[bindx]
     return sol
@@ -179,7 +173,13 @@ end
 
  function stoch_normalize(X::Array{Float64})::Array{Float64}
     tmpmean = mean(X)
-    return (X  .- tmpmean) ./ std(X; corrected = true, mean = tmpmean)
+    tmpstd =  std(X; corrected = true, mean = tmpmean)
+    if !(tmpstd ≈ 0.0)
+     return (X  .- tmpmean) ./tmpstd
+    else
+        @warn "Bad. Std is almost zero. shouldn't divide by it."
+        return (X  .- tmpmean)
+    end
 end
 
 
@@ -239,13 +239,27 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
 
      
             @inbounds for k in 1:m_parameter
+
+
+                if any(isnan.(Θ_y))
+                   @warn "WTF and why?"
+                    @infiltrate
+                end
+
+                    if any(isnan.(Θ_y .- sum_without(Φ_x, k)))
+                   @warn "WTF and why?"
+                    @infiltrate
+                end
+
+
                 Φ_candidate[:,k] = 𝔼_conditional(Θ_y .- sum_without(Φ_x, k), X[:,k],  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
                 Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
 
                 if any(isnan.(Φ_candidate))
                     @infiltrate
-                    @error "WTF and why?"
+                    @warn "WTF and why?"
                 end
+                
            end
             e_new =  ε²(Θ_y, Φ_candidate)
             @debug "Inner loop" (e_old - e_new )  i j
