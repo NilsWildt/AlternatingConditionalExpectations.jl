@@ -177,18 +177,6 @@ end
     end
 
 
-# function sum_without(X::AbstractArray, k::Int64)
-#     sx = size(X,2)
-#     if k == 1 && sx>1
-#    return sum( X[:,2:sx], dims = 2)
-#     elseif k == sx && k>1
-#            return sum( X[:,1:k-1], dims = 2)
-#     elseif k==1 && sx==1 # Need to return zero vector in the 1 response, one predictor case
-#         return 0.0 .* similar(X[:,1])
-#     else
-#    return sum( X[:,1:k - 1], dims = 2) + sum( X[:,k + 1:sx], dims = 2)
-#     end
-# end
 
 function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray} 
     start = time()
@@ -228,9 +216,7 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
             if myace.multiloopversion==:fresh # Opposed to "reuse"
                 Φ_candidate .= 0.0  .* Φ_candidate # Set to zero
             end
-
-              Φ_x = Φ_candidate # Shouldn't be only in this scope.
-
+              Φ_x = Φ_candidate 
             @inbounds for k in 1:m_parameter
                 θ_without_Φ_k = Θ_y
                 for p in 1:m_parameter

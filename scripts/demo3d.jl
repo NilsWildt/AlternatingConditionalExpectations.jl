@@ -40,7 +40,7 @@ mysmoother5 = ACE.FRSS([0.05,0.1,0.5], 0.2, 0.2)
 mykernel = ACE.Kernelregression.Gaussian(σ)
 reg = 1.0
 mysmoother6 = ACE.NWKernelsmooth(mykernel)
-mysmoothers = Array{Smoother}([mysmoother4])
+mysmoothers = Array{Smoother}([mysmoother5])
 # guess_parameters!(mysmoother, Nk)
 myace =  ACE.ACEsim(X,Y,mysmoothers)
 res = ACE.run(myace)
