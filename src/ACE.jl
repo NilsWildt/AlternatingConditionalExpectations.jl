@@ -141,7 +141,12 @@ end
     Y = Y[sindx]
     smoother = myace.smoother
     # @infiltrate
-    sol =  do_smoothing(X, Y, smoother)[bindx]
+    sol =  do_smoothing(copy(X), copy(Y), smoother)[bindx]
+    
+if any(isnan.(sol))
+      @infiltrate
+      @error "WTF and why?"
+     end
     # Scope?
     Y = Y[bindx]
     X = X[bindx]
@@ -230,13 +235,12 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
                 Φ_candidate .= 0.0  .* Φ_candidate # Set to zero
             end
 
-              Φ_x = Φ_candidate
+              Φ_x = Φ_candidate # Shouldn't be only in this scope.
 
      
             @inbounds for k in 1:m_parameter
                 Φ_candidate[:,k] = 𝔼_conditional(Θ_y .- sum_without(Φ_x, k), X[:,k],  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
                 Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
-
 
                 if any(isnan.(Φ_candidate))
                     @infiltrate
