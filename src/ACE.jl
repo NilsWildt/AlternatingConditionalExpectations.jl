@@ -234,11 +234,12 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
 
             @inbounds for k in 1:m_parameter
                 θ_without_Φ_k = Θ_y
-               @inbounds for p in 1:m_parameter
+                for p in 1:m_parameter
                     if p!=k
                       θ_without_Φ_k = θ_without_Φ_k.-Φ_x[:,k]
                     end
                 end
+                
                 Φ_candidate[:,k] = 𝔼_conditional(θ_without_Φ_k, X[:,k],  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
                 Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
            end
