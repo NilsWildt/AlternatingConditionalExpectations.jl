@@ -172,29 +172,24 @@ end
 
 
  function stoch_normalize(X::Array{Float64})::Array{Float64}
-    tmpmean = mean(X)
-    tmpstd =  std(X; corrected = true, mean = tmpmean)
-    if !(tmpstd ≈ 0.0)
-     return (X  .- tmpmean) ./tmpstd
-    else
-        @warn "Bad. Std is almost zero. shouldn't divide by it."
-        return (X  .- tmpmean)
+    tmpmean = mean(X)   
+        return (X  .- tmpmean)/std(X; corrected = true, mean = tmpmean)
     end
 end
 
 
-function sum_without(X::AbstractArray, k::Int64)
-    sx = size(X,2)
-    if k == 1 && sx>1
-   return sum( X[:,2:sx], dims = 2)
-    elseif k == sx && k>1
-           return sum( X[:,1:k-1], dims = 2)
-    elseif k==1 && sx==1 # Need to return zero vector in the 1 response, one predictor case
-        return 0.0 .* similar(X[:,1])
-    else
-   return sum( X[:,1:k - 1], dims = 2) + sum( X[:,k + 1:sx], dims = 2)
-    end
-end
+# function sum_without(X::AbstractArray, k::Int64)
+#     sx = size(X,2)
+#     if k == 1 && sx>1
+#    return sum( X[:,2:sx], dims = 2)
+#     elseif k == sx && k>1
+#            return sum( X[:,1:k-1], dims = 2)
+#     elseif k==1 && sx==1 # Need to return zero vector in the 1 response, one predictor case
+#         return 0.0 .* similar(X[:,1])
+#     else
+#    return sum( X[:,1:k - 1], dims = 2) + sum( X[:,k + 1:sx], dims = 2)
+#     end
+# end
 
 function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray} 
     start = time()
@@ -237,29 +232,15 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
 
               Φ_x = Φ_candidate # Shouldn't be only in this scope.
 
-     
             @inbounds for k in 1:m_parameter
-
-
-                if any(isnan.(Θ_y))
-                   @warn "WTF and why?"
-                    @infiltrate
+                θ_without_Φ_k = Θ_y
+               @inbounds for p in 1:m_parameter
+                    if p!=k
+                      θ_without_Φ_k = θ_without_Φ_k.-Φ_x[:,k]
+                    end
                 end
-
-                    if any(isnan.(Θ_y .- sum_without(Φ_x, k)))
-                   @warn "WTF and why?"
-                    @infiltrate
-                end
-
-
-                Φ_candidate[:,k] = 𝔼_conditional(Θ_y .- sum_without(Φ_x, k), X[:,k],  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
+                Φ_candidate[:,k] = 𝔼_conditional(θ_without_Φ_k, X[:,k],  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
                 Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
-
-                if any(isnan.(Φ_candidate))
-                    @infiltrate
-                    @warn "WTF and why?"
-                end
-                
            end
             e_new =  ε²(Θ_y, Φ_candidate)
             @debug "Inner loop" (e_old - e_new )  i j
