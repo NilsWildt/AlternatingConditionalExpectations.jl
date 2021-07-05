@@ -22,10 +22,8 @@ module ACE
     using LaTeXStrings
     using StaticArrays
     using HybridArrays
-    using Infiltrator
     using Parameters
     using StatsBase
-    using Infiltrator
     include("Kernelregression/Kernelregression.jl")
     using .Kernelregression
     # using PyPlot
