@@ -172,10 +172,9 @@ end
 
 
  function stoch_normalize(X::Array{Float64})::Array{Float64}
-    tmpmean = mean(X)   
+        tmpmean = mean(X)   
         return (X  .- tmpmean)/std(X; corrected = true, mean = tmpmean)
     end
-end
 
 
 # function sum_without(X::AbstractArray, k::Int64)
