@@ -25,6 +25,7 @@ module ACE
     using Infiltrator
     using Parameters
     using StatsBase
+    using Infiltrator
     include("Kernelregression/Kernelregression.jl")
     using .Kernelregression
     # using PyPlot
@@ -226,12 +227,21 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
         while ( abs(e_old - e_new) > myace.errorbound ) && j <= myace.itermax_inner#
             e_old = e_new
             if myace.multiloopversion==:fresh # Opposed to "reuse"
-                Φ_candidate .= 0.0  .* Φ_candidate
+                Φ_candidate .= 0.0  .* Φ_candidate # Set to zero
             end
+
               Φ_x = Φ_candidate
+
+     
             @inbounds for k in 1:m_parameter
                 Φ_candidate[:,k] = 𝔼_conditional(Θ_y .- sum_without(Φ_x, k), X[:,k],  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
                 Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
+
+
+                if any(isnan.(Φ_candidate))
+                    @infiltrate
+                    @error "WTF and why?"
+                end
            end
             e_new =  ε²(Θ_y, Φ_candidate)
             @debug "Inner loop" (e_old - e_new )  i j
@@ -239,7 +249,7 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
             j += 1
             totalcount  += 1
         end
-        Φ_x = Φ_candidate
+
         e_old = e_new;
         Θ_candidate  = 𝔼_conditional(sum(Φ_x, dims = 2), Y, myace, sIy, bsIy)
         Θ_candidate  = stoch_normalize(Θ_candidate)
@@ -289,12 +299,14 @@ end
             Φ_x = bf.Φ_x
             Θ_y = bf.Θ_y
 
-            # remove nan:
+            # # remove nan:
             
-            X[isnan.(X)] .= 0.0 #  -Inf64
-            Y[isnan.(Y)] .= 0.0 #  -Inf64
-            Φ_x[isnan.(Φ_x)] .= 0.0 #  -Inf64
-            Θ_y[isnan.(Θ_y)] .= 0.0 #  -Inf64
+            # X[isnan.(X)] .= 0.0 #  -Inf64
+            # Y[isnan.(Y)] .= 0.0 #  -Inf64
+            # Φ_x[isnan.(Φ_x)] .= 0.0 #  -Inf64
+            # Θ_y[isnan.(Θ_y)] .= 0.0 #  -Inf64
+
+            #! Add some catching NaNs!
 
 
             plot_view_bounds = bf.plot_view_bounds
