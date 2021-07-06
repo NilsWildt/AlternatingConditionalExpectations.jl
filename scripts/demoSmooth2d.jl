@@ -50,7 +50,7 @@ if !any(isnan.(Ysmooth))
         h1 = plot( sort_two_arrays_native(X,Ysmooth),dpi=200,lw=5)
         scatter!(h1,X,Y,alpha=0.05)
 else
-        @error "Fuck" 
+        @error "Sucks."
 end
 
 

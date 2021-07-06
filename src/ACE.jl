@@ -351,7 +351,7 @@ end
                            @series begin
                     title:=""
                 xlabel --> "Φ(X$i)"
-                ylabel --> L"\Theta(Y)"
+                ylabel --> "Θ(Y)"
                                         # xlims := plot_view_bounds[4][1]
                             # ylims:= plot_view_bounds[4][2]
                     subplot := 2*n+1+i
@@ -364,7 +364,7 @@ end
                            @series begin
                     title:=""
                 xlabel --> "Y"
-                ylabel --> L"\Theta(Y)"
+                ylabel --> "Θ(Y)"
                         #    xlims := plot_view_bounds[3][1]
                             # ylims:= plot_view_bounds[3][2]
                     subplot := 3*n+1+1
