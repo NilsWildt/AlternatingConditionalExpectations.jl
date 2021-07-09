@@ -57,6 +57,7 @@ module ACE
     AARD::Float64
     t::Float64 
     itercount::Int64
+    accuracy::Float64
     description::String="ACE_simulation_result"
 end
 
@@ -253,7 +254,7 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
     mAARD = AARD(Φ_x, Θ_y)
     t =  time() - start
     itercount= totalcount
-return  ACEres(X=X,Y=Y, Φ_x= Φ_x, Θ_y=Θ_y, sIx=sIx, sIy=sIy, bsIx=bsIx,bsIy= bsIy, conv_err=conv_err, r_orig =  r_orig , r² =  r², ρ  =  ρ , AARD =  mAARD, t  =  t,itercount=itercount)
+return  ACEres(X=X,Y=Y, Φ_x= Φ_x, Θ_y=Θ_y, sIx=sIx, sIy=sIy, bsIx=bsIx,bsIy= bsIy, conv_err=conv_err, r_orig =  r_orig , r² =  r², ρ  =  ρ , AARD =  mAARD, t  =  t,itercount=itercount,accuracy=myace.errorbound)
     # return res
 end
 
