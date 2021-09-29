@@ -233,7 +233,6 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
             j += 1
             totalcount  += 1
         end
-
         e_old = e_new;
         Θ_candidate  = 𝔼_conditional(sum(Φ_x, dims = 2), Y, myace, sIy, bsIy)
         Θ_candidate  = stoch_normalize(Θ_candidate)
@@ -242,6 +241,24 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
         @debug "outer loop" (e_old - e_new ) i j
         push!(conv_err, abs(e_old - e_new))
     end
+# Last one // Smooth both one last time to look better.
+ @inbounds for k in 1:m_parameter
+                θ_without_Φ_k = Θ_y
+                for p in 1:m_parameter
+                    if p!=k
+                      θ_without_Φ_k = θ_without_Φ_k.-Φ_x[:,k]
+                    end
+                end
+                
+                Φ_candidate[:,k] = 𝔼_conditional(θ_without_Φ_k, X[:,k],  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
+                Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
+end
+           Φ_x=Φ_candidate
+        Θ_candidate  = 𝔼_conditional(sum(Φ_x, dims = 2), Y, myace, sIy, bsIy)
+        Θ_y  = stoch_normalize(Θ_candidate)
+
+
+
     # if any(isnan.(Φ_x)) || any(isnan.(Θ_y))
     #     error("NaNs occured in either Phi or Theta.")
     # end
