@@ -146,7 +146,6 @@ end
     return sol
 end
 
-
 function RMSE(Ytrue::Array{Float64}, Yestimated::Array{Float64})::Float64
     return sqrt(mean((Ytrue .- Yestimated).^2))
 end
@@ -155,7 +154,6 @@ end
 function  AARD(Y, X)::Float64
     return 100.0 ./length(X) * sum(abs.(X.-Y)./abs.(Y))
 end
-
 
 function ε²(Φ_x::Array{Float64}, Θ_y::Array{Float64})::Float64
             # Please input already transformed variables
@@ -169,13 +167,10 @@ end
     sum((Y .- X).^2) / length(X)
 end
 
-
  function stoch_normalize(X::Array{Float64})::Array{Float64}
         tmpmean = mean(X)   
         return (X  .- tmpmean)/std(X; corrected = true, mean = tmpmean)
     end
-
-
 
 function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray} 
     start = time()
@@ -241,7 +236,8 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
         @debug "outer loop" (e_old - e_new ) i j
         push!(conv_err, abs(e_old - e_new))
     end
-# Last one // Smooth both one last time to look better.
+
+# Last one // Smooth both one last time
  @inbounds for k in 1:m_parameter
                 θ_without_Φ_k = Θ_y
                 for p in 1:m_parameter
@@ -249,13 +245,12 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
                       θ_without_Φ_k = θ_without_Φ_k.-Φ_x[:,k]
                     end
                 end
-                
                 Φ_candidate[:,k] = 𝔼_conditional(θ_without_Φ_k, X[:,k],  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
                 Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
 end
-           Φ_x=Φ_candidate
-        Θ_candidate  = 𝔼_conditional(sum(Φ_x, dims = 2), Y, myace, sIy, bsIy)
-        Θ_y  = stoch_normalize(Θ_candidate)
+Φ_x=Φ_candidate
+Θ_candidate  = 𝔼_conditional(sum(Φ_x, dims = 2), Y, myace, sIy, bsIy)
+Θ_y  = stoch_normalize(Θ_candidate)
 
 
 
