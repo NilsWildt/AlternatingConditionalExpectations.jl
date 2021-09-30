@@ -8,11 +8,12 @@ using Test
 Base.Experimental.@optlevel 3
 using StatsPlots
 # Pkg.add(url = "git@github.com:NilsWildt/ACE.jl.git")
-using ACE
+using .ACE
+using TimerOutputs
 using Plots
 using Random
 ENV["JULIA_DEBUG"] = "all"
-Nk = 2000
+Nk = 500
 # Benchmark =  f_b4(Nk, 1, "normal", 1.0, 1.0, false, 42, true, (-2., 2.))
 # Benchmark2 =  f_b1(Nk, 1, "uniform", 1.0, 1.0, false, 0, false, (-3., 3.))
 # Benchmark =  f_b2(Nk, 1, "uniform", 1.0, 0.5, false, 0, false, (-5., 5.))
@@ -40,7 +41,7 @@ mysmoother5 = ACE.FRSS([0.05,0.1,0.5], 0.2, 0.2)
 mykernel = ACE.Kernelregression.Gaussian(σ)
 reg = 1.0
 mysmoother6 = ACE.NWKernelsmooth(mykernel)
-mysmoothers = Array{Smoother}([mysmoother5])
+mysmoothers = Array{ACE.Smoother}([mysmoother2])
 # guess_parameters!(mysmoother, Nk)
 myace =  ACE.ACEsim(X,Y,mysmoothers)
 res = ACE.run(myace)
@@ -49,3 +50,6 @@ res = ACE.run(myace)
 gr()
 h1 = plot(res)
 display(h1)
+
+print_timer()
+reset_timer!()
