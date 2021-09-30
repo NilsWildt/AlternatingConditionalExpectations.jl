@@ -97,9 +97,9 @@ end
  function generate_bivariate_data(N = 200, σ_x = 1, σ_noise = 1, vargs...)
     rng = []
     if length(vargs) > 0
-        rng = MersenneTwister(vargs[1])
+        rng = Xoshiro(vargs[1])
     else
-        rng = MersenneTwister()
+        rng = Xoshiro()
     end
     eps_err = σ_x .* randn(rng, Float64, (N,))
     X = randn(rng, Float64, (N,)) # collect(LinRange(0.0, 4 * pi, N))#
@@ -109,7 +109,7 @@ end
 
 
 function get_uniform_distributed_data(N)
-    rng = MersenneTwister()
+    rng = Xoshiro()
     lb = 0.0
     ub = 5.0
     dims = (N, 1)
@@ -121,9 +121,9 @@ end
     function generate_multivariate_data(N = 200, σ_x1 = 1.0, σ_x2 = 1.0, σ_noise = 1.0, vargs...)
     rng = []
     if length(vargs) > 0
-        rng = MersenneTwister(vargs[1])
+        rng = Xoshiro(vargs[1])
     else
-        rng = MersenneTwister()
+        rng = Xoshiro()
     end
 
     eps_err = randn(rng, Float64, (N,))
@@ -186,13 +186,13 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
     end
     # SOrt response variables
     sIy, bsIy = get_sortidx(vec(Y))
-    Θ_y = stoch_normalize(copy(Y))
+    Θ_y = copy(Y) # stoch_normalize
     Θ_candidate = copy(Θ_y)
 
     Φ_x = copy(X)
-    for i in 1:m_parameter
-        Φ_x[:,i] .=   Φ_x[:,i] .- mean(Φ_x[:,i])
-    end
+    # for i in 1:m_parameter
+    #     Φ_x[:,i] .=   Φ_x[:,i] .- mean(Φ_x[:,i])
+    # end
     Φ_candidate = copy(Φ_x)
 
 
@@ -238,19 +238,19 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
     end
 
 # Last one // Smooth both one last time
- @inbounds for k in 1:m_parameter
-                θ_without_Φ_k = Θ_y
-                for p in 1:m_parameter
-                    if p!=k
-                      θ_without_Φ_k = θ_without_Φ_k.-Φ_x[:,k]
-                    end
-                end
-                Φ_candidate[:,k] = 𝔼_conditional(θ_without_Φ_k, X[:,k],  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
-                Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
-end
-Φ_x=Φ_candidate
-Θ_candidate  = 𝔼_conditional(sum(Φ_x, dims = 2), Y, myace, sIy, bsIy)
-Θ_y  = stoch_normalize(Θ_candidate)
+#  @inbounds for k in 1:m_parameter
+#                 θ_without_Φ_k = Θ_y
+#                 for p in 1:m_parameter
+#                     if p!=k
+#                       θ_without_Φ_k = θ_without_Φ_k.-Φ_x[:,k]
+#                     end
+#                 end
+#                 Φ_candidate[:,k] = 𝔼_conditional(θ_without_Φ_k, X[:,k],  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
+#                 Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
+# end
+# Φ_x=Φ_candidate
+# Θ_candidate  = 𝔼_conditional(sum(Φ_x, dims = 2), Y, myace, sIy, bsIy)
+# Θ_y  = stoch_normalize(Θ_candidate)
 
 
 
