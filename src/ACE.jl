@@ -9,6 +9,7 @@ module ACE
     # using PkgTemplates
     # t = Template(; user = "nildt", disable_defaults = [Git])
     using Random
+    # using TimerOutputs
     using LinearAlgebra
     using StatsPlots
     # using Revise
@@ -136,13 +137,13 @@ end
 
  function 𝔼_conditional(Y::Array{Float64}, X::Array{Float64},  myace::ACEsim, sindx::Vector{Int64}, bindx::Vector{Int64})
      # E(Y|X): u(x) ... (however x is implicitly given.)
-    X = X[sindx]
-    Y = Y[sindx]
+    # X = X[sindx]
+    # Y = Y[sindx]
     smoother = myace.smoother
-    # @infiltrate
-    sol =  do_smoothing(X,Y, smoother)[bindx]
-    Y = Y[bindx]
-    X = X[bindx]
+    # @infiltrate # @timeit "Smoothing"
+    sol =    do_smoothing(X[sindx], Y[sindx], smoother)[bindx]
+    # Y = Y[bindx]
+    # X = X[bindx]
     return sol
 end
 
@@ -202,6 +203,7 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
     conv_err = []
     totalcount = 0
     i = 1
+    θ_without_Φ_k = copy(Θ_y)
     while ( abs(e_old - e_new) > myace.errorbound )  && i <= myace.itermax_outer #
         j = 1
         Θ_y =  Θ_candidate
@@ -218,8 +220,8 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
                       θ_without_Φ_k = θ_without_Φ_k.-Φ_x[:,k]
                     end
                 end
-                
-                Φ_candidate[:,k] = 𝔼_conditional(θ_without_Φ_k, X[:,k],  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
+                # @timeit "Econd1" 
+                Φ_candidate[:,k] =   𝔼_conditional(θ_without_Φ_k, X[:,k],  myace,  sIx[:,k], bsIx[:,k]) # E_y(...)
                 Φ_candidate[:,k] = Φ_candidate[:,k] .- mean(Φ_candidate[:,k])
            end
             e_new =  ε²(Θ_y, Φ_candidate)
@@ -228,11 +230,11 @@ function run(myace::ACEsim{T,S}) where {T,S <: AbstractArray}
             j += 1
             totalcount  += 1
         end
-        e_old = e_new;
-        Θ_candidate  = 𝔼_conditional(sum(Φ_x, dims = 2), Y, myace, sIy, bsIy)
-        Θ_candidate  = stoch_normalize(Θ_candidate)
+        e_old = e_new;# @timeit "Econd2"
+        Θ_candidate  =    𝔼_conditional(sum(Φ_x, dims = 2), Y, myace, sIy, bsIy)
+        Θ_candidate  = stoch_normalize(Θ_candidate) #  @timeit "Normalize2" 
         i += 1
-        e_new =  ε²(Θ_candidate, Φ_x)
+        e_new =   ε²(Θ_candidate, Φ_x) # @timeit "errorcalc" 
         @debug "outer loop" (e_old - e_new ) i j
         push!(conv_err, abs(e_old - e_new))
     end

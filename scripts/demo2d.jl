@@ -5,9 +5,12 @@
 # Load Packages
 using DrWatson
 @quickactivate "ACE"
-using ACE
+using .ACE
 using Plots
 using Suppressor
+using TimerOutputs
+
+# const to = TimerOutput()
 # ENV["JULIA_DEBUG"] = "all"
 # Initalize Plot backend
 gr()
@@ -16,26 +19,29 @@ include(srcdir("utils.jl"))
 include(srcdir("benchmark_functions.jl"))
 ########################################################################
 ########################################################################
-@time begin
-Nk = 5000 # Problem size 
-Benchmark =  f_b1(Nk, 1, "uniform", 1.0, 1.0, true, 42, false, (-3.0, 1.4))
+Nk = 500 # Problem size 
+Benchmark =  f_b1(Nk, 1, "uniform", 1.0, 1.0, true, 42, true, (-5.0, 1.4))
 # display(plot(Benchmark.X,Benchmark.Y,dpi=80))
-# smoother = ACE.LASb(Nk ÷  24)
-smoother = Array{Smoother}([ACE.FRSS([0.05,0.1,0.5], 0.2, 0.2)])
+s1 = ACE.FRSS([0.05,0.1,0.5], 0.2, 0.2)
+smoother = ACE.LASb(Nk ÷  24)
+# smoother = Array{Smoother}([smoother])
 # σ = 0.03
 # mykernel = ACE.Kernelregression.Gaussian(σ)
-# smoother =  Array{Smoother}([ACE.NWKernelsmooth(mykernel)])
+# smoother =  Array{ACE.Smoother}([ACE.NWKernelsmooth(mykernel)])
 Simulation1 =  ACE.ACEsim(Matrix(Benchmark.X),Matrix(Benchmark.Y),smoother)
-result = ACE.run(Simulation1)
+result =@timeit  "acetotal" ACE.run(Simulation1)
 
-end
 
-@info "results:" 1-result.r²[1] result.r²[1] 1-result.ρ result.ρ result.AARD result.r_orig result.t
+# @info "results:" 1-result.r²[1] result.r²[1] 1-result.ρ result.ρ result.AARD result.r_orig result.t
 
 
 if !isnan.(result.r²[1])
-        gr()
-      @suppress  display(plot(result,dpi=200))
+        plotly()
+      @suppress  display(plot(result,dpi=80,size=(1200,899)))
 else
         @error "" result.r²[1] result.ρ result.Φ_x, result.Θ_y
 end
+
+
+# print_timer()
+# reset_timer!()

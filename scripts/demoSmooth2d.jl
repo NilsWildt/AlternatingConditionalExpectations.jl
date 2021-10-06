@@ -5,7 +5,7 @@
 # Load Packages
 using DrWatson
 @quickactivate "ACE"
-using ACE
+using .ACE
 using Plots
 # ENV["JULIA_DEBUG"] = "all"
 # Initalize Plot backend
@@ -27,15 +27,15 @@ end
 ########################################################################
 ########################################################################
 # @time begin
-Nk = 5000 # Problem size 
-Benchmark =  f_b2(Nk, 1, "uniform", 1.0, 1.0, false, 42, false, (-2.0, 1.4))
+Nk = 500 # Problem size 
+Benchmark =  f_b1(Nk, 1, "uniform", 1.0, 1.0, false, 42, false, (-2.0, 1.4))
 X = vec(Benchmark.X)
 Y = vec( Benchmark.Y)
 # display(plot(Benchmark.X,Benchmark.Y,dpi=80))
 @info "Dbg" Nk ÷  7
 # smoother = ACE.LAS(Nk ÷  25)
 # smoother = Array{Smoother}([ACE.FRSS([0.05,0.1,0.5], 0.2, 0.2)])
-σ = 0.05
+σ = .2
 mykernel = ACE.Kernelregression.Gaussian(σ)
 smoother =  Array{Smoother}([ACE.NWKernelsmooth(mykernel)])
 # Simulation1 =  ACE.ACEsim(Matrix(Benchmark.X),Matrix(Benchmark.Y),smoother)
@@ -45,12 +45,13 @@ sIx, bsIx = get_sortidx(X)
 sIy, bsIy = get_sortidx(vec(Y))
 Ysmooth  =ACE.do_smoothing(X[sIx],Y[sIx], smoother)[bsIx]
 
-if !any(isnan.(Ysmooth))
-        gr()
+# if !any(isnan.(Ysmooth))
+        # gr()
+        plotly()
         h1 = plot( sort_two_arrays_native(X,Ysmooth),dpi=200,lw=5)
-        scatter!(h1,X,Y,alpha=0.05)
-else
-        @error "Sucks."
-end
+        scatter!(h1,X,Y,alpha=0.09)
+# else
+#         @error "Sucks."
+# end
 
 
