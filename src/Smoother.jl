@@ -1,11 +1,11 @@
 
-using Interpolations 
+using Interpolations
 using DocStringExtensions
 using ImageFiltering
 using StatsBase
 using LinearAlgebra
 # using LocalFilters
-Base.Experimental.@optlevel 3   
+Base.Experimental.@optlevel 3
 
 
 
@@ -25,7 +25,7 @@ k : window-width
 abstract type Smoother end
 mutable struct LAS <: Smoother
     window::Int64
-    function LAS(window) 
+    function LAS(window)
         new(_sanitize_k(window))
     end
 end
@@ -45,14 +45,24 @@ end
 
 @fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LAS)
     window = smoother.window
-    window = Int64((window-1)/2)
+    window = Int64((window - 1) / 2)
     Ny = length(y)
-    LASvals =  zeros(Float64, Ny)
+    LASvals = zeros(Float64, Ny)
     @inbounds @simd for i in 1:Ny
-        LASvals[i] =  mean(@views  y[max(i - window, 1):min(i + window, Ny)])
+        LASvals[i] = mean(@views y[max(i - window, 1):min(i + window, Ny)])
     end
     return LASvals
 end
+
+
+@fastmath function do_smoothing!(out, x, y, smoother::LAS)
+    window = Int8((smoother.window - 1) / 2)
+    Ny = length(y)
+    @inbounds for i in 1:Ny
+        out[i] = mymean(@views y[max(i - window, 1):min(i + window, Ny)])
+    end
+end
+
 
 # Base.String(k::LAS) = "Smoothed_LAS($(2 * k.k + 1))"
 # @fastmath function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LAS)
@@ -66,26 +76,37 @@ Base.String(k::LAS) = "Smoothed_LAS($(2 * k.window + 1))"
 
 mutable struct LASb <: Smoother
     window::Int64
-       function LASb(window) 
+    function LASb(window)
         new(_sanitize_k(window))
     end
 end
 
 
-@fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LASb) 
+@fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LASb)
     k = smoother.window
-    k = Int64(ceil((k-1)/2))
+    k = Int64(ceil((k - 1) / 2))
     Ny = length(y)
-    LASbvals =  zeros(Float64, (Ny))
-    @inbounds @simd  for i in eachindex(y)
-        ind_low =  max(i - k, 1) - min(0, Ny - i - k + 1):i 
-        ind_high =  i + 1:min(i + k, Ny) + min(0, i - k)
-        LASbvals[i]  =    sum(@views y[ind_low]) + sum(@views y[ind_high]) 
-        LASbvals[i] = LASbvals[i]/(length(ind_low) +  length(ind_high))
+    LASbvals = zeros(Float64, (Ny))
+    @inbounds @simd for i in eachindex(y)
+        ind_low = max(i - k, 1)-min(0, Ny - i - k + 1):i
+        ind_high = i+1:min(i + k, Ny)+min(0, i - k)
+        LASbvals[i] = sum(@views y[ind_low]) + sum(@views y[ind_high])
+        LASbvals[i] = LASbvals[i] / (length(ind_low) + length(ind_high))
     end
     return LASbvals
 end
 
+@fastmath function do_smoothing!(LASbvals, x, y, smoother::LASb)
+    k = smoother.window
+    k = Int64(ceil((k - 1) / 2))
+    Ny = length(y)
+    @inbounds for i in eachindex(y)
+        ind_low = max(i - k, 1)-min(0, Ny - i - k + 1):i
+        ind_high = i+1:min(i + k, Ny)+min(0, i - k)
+        LASbvals[i] = sum(@views y[ind_low]) + sum(@views y[ind_high])
+        LASbvals[i] /= (length(ind_low) + length(ind_high))
+    end
+end
 
 # @fastmath function do_smoothing_old(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LASb) 
 #     k = smoother.window
@@ -104,7 +125,7 @@ Base.String(k::LASb) = "Smoothed_LASb($(2 * k.window + 1))"
 
 mutable struct LLSS <: Smoother
     window::Int64
-    function LLSS(window) 
+    function LLSS(window)
         new(_sanitize_k(window))
     end
 end
@@ -117,15 +138,15 @@ end
 #     Nx = length(x)
 #     Ny = length(y)
 #     LLSS_values =  zeros(Float64, Nx)
-    
+
 #     C =  zeros(Float64, Nx)
 #     V =  zeros(Float64, Nx)
 #     α =  zeros(Float64, Nx)
 #     β =  zeros(Float64, Nx)
-    
+
 #     # Start at the leftmost point...
 #     ind = 2:k + 1 
-    
+
 #     xmean = mean(x[ind])
 #     ymean = mean(y[ind])
 #     C[1] = sum((x[ind] .- xmean) .* (y[ind] .- ymean))
@@ -156,7 +177,7 @@ end
 #             end
 #             α[i] = -β[i] * xmean + ymean
 #         elseif (i + k > Nx - 1) # Case "am Ende"
-            
+
 #             indlow = i - k:i - 1
 #             indhigh = i:Nx
 #             xind = @views vcat(x[indlow], x[indhigh])
@@ -209,14 +230,14 @@ end
 #     return  LLSS_values
 # end
 
-@fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSS) 
+@fastmath function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSS)
     k = smoother.window
-    k = Int64(ceil((k-1)/2))
+    k = Int64(ceil((k - 1) / 2))
     Ny = length(y)
-    LLSS_values =  zeros(Float64, Ny)
+    LLSS_values = zeros(Float64, Ny)
     C = 0.0
     V = 0.0
-        # Start at the leftmost point...
+    # Start at the leftmost point...
     @inbounds for i = Base.OneTo(Ny)
         ind = max(i - k, 1):min(i + k, Ny)
         # Nind = length(ind)
@@ -224,35 +245,35 @@ end
         ym = mean(y[ind])
         C = 0.0
         V = 0.0
-        @inbounds  @simd   for si in ind
+        @inbounds @simd for si in ind
             C = C .+ (x[si] .- xm) * (y[si] .- ym)
-            V = V .+ (x[si] .- xm).^2
+            V = V .+ (x[si] .- xm) .^ 2
         end
         β = C / V
         α = ym .- β' * xm
         LLSS_values[i] = α .+ β .* x[i]
     end
-    return  LLSS_values
+    return LLSS_values
 end
 
 
 # Smoothing in the smoother.k*2+1 box but calculating abs(y-smoothedvals) plus do LOOCV.
-function loocv(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSS) 
+function loocv(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSS)
     k = smoother.window
     # if !presorted
-        # x, y =   _sanitizeinput(x, y)
+    # x, y =   _sanitizeinput(x, y)
     # end
     Nx = length(x)
     Ny = length(y)
     ysmoothed = do_smoothing(x, y, smoother, true)
     # preallocate
-    cv =  zeros(Float64, (Nx,))
+    cv = zeros(Float64, (Nx,))
     @inbounds @simd for i in 1:Nx
         ind = max(i - k, 1):min(i + k, Nx) # actually take 2k+1 values...
         xmean = mean(x[ind])
-        denom = (1.0 - 1.0 / (2 * k) - (x[i] - xmean) / var(x[ind]; corrected = false, mean = xmean) ) 
+        denom = (1.0 - 1.0 / (2 * k) - (x[i] - xmean) / var(x[ind]; corrected=false, mean=xmean))
 
-        cv[i]  = (y[i] - ysmoothed[i] ) / denom# As in  A VARUBLE SPAN SMOOTHER by Friedman 1984
+        cv[i] = (y[i] - ysmoothed[i]) / denom# As in  A VARUBLE SPAN SMOOTHER by Friedman 1984
     end
     return abs.(cv), ysmoothed
 end
@@ -265,34 +286,34 @@ Base.String(k::LLSS) = "Smoothed_LLSS($(2 * k.window + 1))"
 
 mutable struct LLSSb <: Smoother
     window::Int64
-    function LLSSb(window) 
+    function LLSSb(window)
         new(_sanitize_k(window))
     end
 end
 
-function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSSb) 
+function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::LLSSb)
     k = smoother.window
-    k = Int64(ceil((k-1)/2))
+    k = Int64(ceil((k - 1) / 2))
     # if !presorted
-        # x, y =   _sanitizeinput(x, y)
+    # x, y =   _sanitizeinput(x, y)
     # end
     Ny = length(y)
-    LLSSbvals =  zeros(Float64, Ny)
-    @fastmath @inbounds @simd  for i in 1:Ny # @inbounds @simd 
-        indlow = max(i - k, 1) - min(0, Ny - i - k + 1):i - 1
-        indhigh = i:min(i + k, Ny) + min(0, i - k)
+    LLSSbvals = zeros(Float64, Ny)
+    @fastmath @inbounds @simd for i in 1:Ny # @inbounds @simd 
+        indlow = max(i - k, 1)-min(0, Ny - i - k + 1):i-1
+        indhigh = i:min(i + k, Ny)+min(0, i - k)
         xind = vcat(x[indlow], x[indhigh])
         yind = vcat(y[indlow], y[indhigh])
 
         xmean = mean(xind)
         ymean = mean(yind)
         C = sum((xind .- xmean) .* (yind .- ymean))
-        V = sum((xind .- xmean).^2)
+        V = sum((xind .- xmean) .^ 2)
         β = C / V
         α = -β * xmean + ymean
         LLSSbvals[i] = α + β * x[i]
     end
-    return   LLSSbvals
+    return LLSSbvals
 end
 
 
@@ -301,7 +322,7 @@ end
 function loocv(x::AbstractVecOrMat{Float64}, y::AbstractVecOrMat{Float64}, smoother::Smoother)
     k = smoother.window
     # if !presorted
-        # x, y =   _sanitizeinput(x, y)
+    # x, y =   _sanitizeinput(x, y)
     # end
     Nx = length(x)
     Ny = length(y)
@@ -309,14 +330,14 @@ function loocv(x::AbstractVecOrMat{Float64}, y::AbstractVecOrMat{Float64}, smoot
     # preallocate
     cv = zeros(Float64, (Nx,))
     @inbounds @simd for i in 1:Nx
-        ind_low = max(i - k, 1) - min(0, Nx - i - k + 1):i 
-        ind_high =  i + 1:min(i + k, Nx) + min(0, i - k)
+        ind_low = max(i - k, 1)-min(0, Nx - i - k + 1):i
+        ind_high = i+1:min(i + k, Nx)+min(0, i - k)
         xind = vcat(x[ind_low], x[ind_high])
         xmean = mean(xind)
-        denom = (1.0 - 1.0 / (2 * k) - (x[i] - xmean) / var(xind; corrected = false, mean = xmean) ) 
-        cv[i] = (y[i] - ysmoothed[i] ) / denom # As in  A VARUBLE SPAN SMOOTHER by Friedman 1984
+        denom = (1.0 - 1.0 / (2 * k) - (x[i] - xmean) / var(xind; corrected=false, mean=xmean))
+        cv[i] = (y[i] - ysmoothed[i]) / denom # As in  A VARUBLE SPAN SMOOTHER by Friedman 1984
     end
-    return  abs.(cv), ysmoothed
+    return abs.(cv), ysmoothed
 end
 
 
@@ -331,13 +352,13 @@ mutable struct Kernelsmooth <: Smoother
 end
 
 
-function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::Kernelsmooth) 
+function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::Kernelsmooth)
     # x, y =   _sanitizeinput(x, y)
-    x =  Array{Float64,1}(x)
-    y =  Array{Float64,1}(y)
+    x = Array{Float64,1}(x)
+    y = Array{Float64,1}(y)
     Nx = length(x)
-   
-    xeval =  collect(LinRange(x[1], x[end], Nx))
+
+    xeval = collect(LinRange(x[1], x[end], Nx))
     kInterpolant = Kernelregression.get_kernel_interpolant(x, y, smoother.smoothk, smoother.reg)
     return kInterpolant(xeval)
 end
@@ -358,17 +379,17 @@ mutable struct NWKernelsmooth <: Smoother
     smoothk::SKernel
 end
 
-function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::NWKernelsmooth) 
+function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::NWKernelsmooth)
     # x, y =   _sanitizeinput(x, y)
     Nx = length(x)
-   
-    m(a, b) =  Kernelregression.evalKernel(smoother.smoothk, a .- b)
+
+    m(a, b) = Kernelregression.evalKernel(smoother.smoothk, a .- b)
     retval = zeros(size(x))
     @inbounds @simd for i in 1:Nx
         tmp = m(x[i], x)
         retval[i] = mean((tmp ./ mean(tmp)) .* y)
     end
-    return   retval
+    return retval
 end
 
 function Base.String(ks::NWKernelsmooth)
@@ -383,7 +404,7 @@ end
 function guess_parameters!(Y::Array{Float64}, mysmoother::NWKernelsmooth)
     N = length(Y)
     try
-        smoother.smoothk.σ =   0.9 * minimum(std(Y), iqr(Y) / 1.34) * N^(-1 / 5) # ((4 * std(Y)^5) / (3 * N)).^(1 / 5)
+        smoother.smoothk.σ = 0.9 * minimum(std(Y), iqr(Y) / 1.34) * N^(-1 / 5) # ((4 * std(Y)^5) / (3 * N)).^(1 / 5)
         println("We're doing it with k = $(mysmoother.k)")
     catch e
         println("We don't have a k, as we're probably using kernels.")
@@ -402,7 +423,7 @@ mutable struct FRSS <: Smoother
 end
 
 
-@fastmath function do_smoothing(x::T, y::T, smoother::FRSS)  where {T <: AbstractVecOrMat}
+@fastmath function do_smoothing(x::T, y::T, smoother::FRSS) where {T<:AbstractVecOrMat}
     ## STEP 0: Prepare
     # x, y =   _sanitizeinput(x, y)
     Nx = length(x)
@@ -413,40 +434,40 @@ end
     ## STEP 1
     # Do the first three smooths according to initial_Js:
     # Store the three smoothed curves and get the residuals
-    initial_Js_array =  repeat(smoother.initial_Js', Nx, 1) # Want column major.
+    initial_Js_array = repeat(smoother.initial_Js', Nx, 1) # Want column major.
 
-    initial_smooth =   zeros(Float64, Nx, length(smoother.initial_Js))
-    initial_cv_residuals =   zeros(Float64, Nx, length(smoother.initial_Js))
-    @inbounds  for (i, J) in enumerate(Nx .* smoother.initial_Js)
-        lin_smoother =  standardsmooth(J) 
+    initial_smooth = zeros(Float64, Nx, length(smoother.initial_Js))
+    initial_cv_residuals = zeros(Float64, Nx, length(smoother.initial_Js))
+    @inbounds for (i, J) in enumerate(Nx .* smoother.initial_Js)
+        lin_smoother = standardsmooth(J)
         # local presorted = true
-        initial_cv_residuals[:,i], initial_smooth[:,i] = loocv(x, y, lin_smoother)
+        initial_cv_residuals[:, i], initial_smooth[:, i] = loocv(x, y, lin_smoother)
     end
 
 
     ## STEP 2: Smooth residual curve
-    initial_residuals_smoothed =  zeros(Float64, size(initial_cv_residuals))# Reuse memory 
+    initial_residuals_smoothed = zeros(Float64, size(initial_cv_residuals))# Reuse memory 
     # Now smooth the three residuals with the medium_J
-    lin_smoother =  standardsmooth(smoother.medium_J * Nx) 
+    lin_smoother = standardsmooth(smoother.medium_J * Nx)
     @inbounds @simd for i in 1:size(initial_cv_residuals, 2)
-        initial_residuals_smoothed[:,i] = do_smoothing(x, initial_cv_residuals[:,i], lin_smoother)
+        initial_residuals_smoothed[:, i] = do_smoothing(x, initial_cv_residuals[:, i], lin_smoother)
     end
 
     ## STEP 3: Get the Js with best residuals 
     # From the three curves, take always the J with the best residual.
-    best_Js = initial_Js_array[argmin(initial_residuals_smoothed, dims = 2)]
+    best_Js = initial_Js_array[argmin(initial_residuals_smoothed, dims=2)]
 
     ## STEP 4: Smooth this curve with medium smoother
-    lin_smoother =  standardsmooth(smoother.medium_J * Nx) 
-    smoothed_best_Js =  do_smoothing(x, best_Js, lin_smoother) # Trajectory of "best choice for J".
+    lin_smoother = standardsmooth(smoother.medium_J * Nx)
+    smoothed_best_Js = do_smoothing(x, best_Js, lin_smoother) # Trajectory of "best choice for J".
 
     # Remove Js outside the initially given values:
     clamp!(Array(smoothed_best_Js), smoother.initial_Js[1], smoother.initial_Js[end])
     # Then interpolate
     interpolated_smooth = zeros(Float64, Nx, 1)
     @inbounds @simd for i in 1:Nx
-     # 1. find two curves to interpolate between. 
-        j1  = 0
+        # 1. find two curves to interpolate between. 
+        j1 = 0
         # First find closest
         if abs(smoothed_best_Js[i] - smoother.initial_Js[1]) < abs(smoothed_best_Js[i] - smoother.initial_Js[2])
             j1 = 1
@@ -454,15 +475,15 @@ end
             j1 = 2
         end
         j2 = 3
-        interpolated_smooth[i] = (initial_smooth[i,j1] - initial_smooth[i,j2]) / (smoother.initial_Js[j1] - smoother.initial_Js[j2]) * (smoothed_best_Js[i] - smoother.initial_Js[j2]) + initial_smooth[i,j2]     
+        interpolated_smooth[i] = (initial_smooth[i, j1] - initial_smooth[i, j2]) / (smoother.initial_Js[j1] - smoother.initial_Js[j2]) * (smoothed_best_Js[i] - smoother.initial_Js[j2]) + initial_smooth[i, j2]
     end
     # Final smooth
-    lin_smoother =  standardsmooth(smoother.final_J * Nx) 
+    lin_smoother = standardsmooth(smoother.final_J * Nx)
     final_smooth = do_smoothing(x, interpolated_smooth, lin_smoother)
     return final_smooth
 end
 
-Base.String(frss::FRSS) = "Smoothed_FRSS" 
+Base.String(frss::FRSS) = "Smoothed_FRSS"
 
 
 
@@ -477,9 +498,9 @@ Base.String(frss::FRSS) = "Smoothed_FRSS"
 # end
 
 function _sanitize_k(k)
-    if typeof(k)!= Int64
+    if typeof(k) != Int64
         @debug "Smoother bandwidth should be of type Int64. We round and cast it.  It was before of type: " typeof(k)
-    k =  Int64.(round.(k, digits = 0))
+        k = Int64.(round.(k, digits=0))
     end
     if iseven(k)
         @debug "Smoother bandwidth should be odd. We added +1"
