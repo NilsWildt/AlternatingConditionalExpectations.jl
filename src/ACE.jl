@@ -17,11 +17,15 @@ using Plots
 using Printf
 using LinearAlgebra
 using StatsBase 
+using DispatchDoctor
+using ConcreteStructs
+
+
 
 include("Kernelregression/Kernelregression.jl")
 using .Kernelregression
 
-@with_kw struct ACEres
+Base.@kwdef @concrete struct ACEres
     X::AbstractArray
     Y::AbstractArray
     Φ_x::AbstractArray
@@ -49,7 +53,7 @@ using .Kernelregression
     description::String = "ACE_simulation_result"
 end
 
-struct ACEsim{T,S<:AbstractArray}
+Base.@kwdef @concrete struct ACEsim{T,S<:AbstractArray}
     X::S
     Y::S
     smoother::T
@@ -59,15 +63,15 @@ struct ACEsim{T,S<:AbstractArray}
     multiloopversion::Symbol
 end
 
-function ACEsim(X::S, Y::S, smoother::T, 
+@stable function ACEsim(X::S, Y::S, smoother::T;
                 errorbound::Float64=1e-4, 
                 itermax_inner::Int64=50, 
                 itermax_outer::Int64=500, 
-                multiloopversion::Symbol=:fresh) where {T,S}
+                multiloopversion=:fresh) where {T,S}
     ACEsim{T,S}(X, Y, smoother, errorbound, itermax_inner, itermax_outer, multiloopversion)
 end
 
-function get_sortidx(X::AbstractArray)::Tuple{Vector{Int64},Vector{Int64}}
+@stable function get_sortidx(X::AbstractArray)::Tuple{Vector{Int64},Vector{Int64}}
     N = length(X)
     sort_idx = sortperm(X)
     sort_idx_back = zeros(Int64, N)
@@ -75,7 +79,7 @@ function get_sortidx(X::AbstractArray)::Tuple{Vector{Int64},Vector{Int64}}
     return sort_idx, sort_idx_back
 end
 
-function generate_bivariate_data(N=200, σ_x=1, σ_noise=1, seed=nothing)
+@stable function generate_bivariate_data(N=200, σ_x=1, σ_noise=1, seed=nothing)
     rng = isnothing(seed) ? Xoshiro() : Xoshiro(seed)
     eps_err = σ_x .* randn(rng, Float64, N)
     X = randn(rng, Float64, N)
@@ -83,34 +87,47 @@ function generate_bivariate_data(N=200, σ_x=1, σ_noise=1, seed=nothing)
     return SVector{N,Float64}(X), SVector{N,Float64}(Y)
 end
 
-function 𝔼_conditional!(out, Y, X, myace::ACEsim, sindx, bindx)
-    X_vec = vec(X)
-    Y_vec = vec(Y)
-    X_sorted = convert(Vector{Float64}, X_vec[sindx])
-    Y_sorted = convert(Vector{Float64}, Y_vec[sindx])
+@stable function 𝔼_conditional!(out, Y, X, myace::ACEsim, sindx, bindx)
+    X_vec = reshape(X,:) #vec(X)
+    Y_vec = reshape(Y,:) #vec(Y)
+    X_sorted = @view X_vec[sindx]
+    Y_sorted = @view Y_vec[sindx]
     outm = Smoothers.do_smoothing(X_sorted, Y_sorted, myace.smoother)
     out .= outm[bindx]
 end
 
-function ε²(Φ_x::AbstractArray, Θ_y::AbstractArray)::Float64
+@stable function ε²(Φ_x::AbstractArray, Θ_y::AbstractArray)::Float64
     err = StatsBase.mean((Θ_y .- sum(Φ_x, dims=2)) .^ 2)
     return err / var(Θ_y)
 end
 
-function stoch_normalize(X::AbstractArray)::AbstractArray
-    μ = StatsBase.mean(X)
-    return (X .- μ) / std(X; corrected=true, mean=μ)
+@stable function stoch_normalize!(out::AbstractArray, X::AbstractArray)
+    n = length(X)
+    μ = sum(X) / n
+    σ = sqrt(sum((x - μ)^2 for x in X) / (n - 1))
+    @. out = (X - μ) / σ
+    return out
 end
 
-function sum_wo_theta!(out, θ, x, i::Int)
-    out .= θ .- sum(view(x, :, 1:i-1), dims=2) .- sum(view(x, :, i+1:size(x,2)), dims=2)
+@stable function stoch_normalize(X::AbstractArray)
+    out = similar(X)
+    stoch_normalize!(out, X)
+    return out
 end
 
-function run(myace::ACEsim{T,S}) where {T,S<:AbstractArray}
+@stable function sum_wo_theta!(out, θ, x, i::Int)
+    @simd for j in 1:size(x,1)
+        out[j] = θ[j] - sum(view(x, j, 1:i-1)) - sum(view(x, j, i+1:size(x,2)))
+    end
+end
+
+
+@stable function run(myace::ACEsim{T,S}) where {T,S<:AbstractArray}
     start = time()
     X, Y = myace.X, myace.Y
     Nx, m_parameter = size(X)
     
+    # Preallocate arrays
     sIx = Array{Int64}(undef, Nx, m_parameter)
     bsIx = Array{Int64}(undef, Nx, m_parameter)
     for i in 1:m_parameter
@@ -122,9 +139,15 @@ function run(myace::ACEsim{T,S}) where {T,S<:AbstractArray}
     Φ_x = copy(X)
     θ_without_Φ_k = copy(Θ_y)
     
+    # New preallocations
+    conv_err = Vector{Float64}(undef, myace.itermax_outer * myace.itermax_inner)
+    Φ_x_col = Vector{Float64}(undef, Nx)  # for column operations
+    Φ_x_sum = Vector{Float64}(undef, Nx)  # for sum storage
+    temp_mean = Vector{Float64}(undef, m_parameter)  # for mean calculations
+    
     e_old = Inf
     e_new = ε²(Θ_y, Φ_x)
-    conv_err = Float64[]
+    conv_err_idx = 0
     totalcount = 0
     
     for i in 1:myace.itermax_outer
@@ -135,18 +158,25 @@ function run(myace::ACEsim{T,S}) where {T,S<:AbstractArray}
             for k in 1:m_parameter
                 sum_wo_theta!(θ_without_Φ_k, Θ_y, Φ_x, k)
                 𝔼_conditional!(view(Φ_x, :, k), θ_without_Φ_k, X[:,k], myace, sIx[:,k], bsIx[:,k])
-                Φ_x[:,k] .-= StatsBase.mean(view(Φ_x, :, k))
+                
+                # Use preallocated array for mean calculation
+                col_view = view(Φ_x, :, k)
+                temp_mean[k] = sum(col_view) / length(col_view)
+                col_view .-= temp_mean[k]
             end
             
             e_new = ε²(Θ_y, Φ_x)
-            push!(conv_err, abs(e_old - e_new))
+            conv_err_idx += 1
+            conv_err[conv_err_idx] = abs(e_old - e_new)
             totalcount += 1
             
             abs(e_old - e_new) ≤ myace.errorbound && break
         end
         
-        𝔼_conditional!(Θ_y, sum(Φ_x, dims=2), Y, myace, sIy, bsIy)
-        Θ_y = stoch_normalize(Θ_y)
+        # Use preallocated sum array
+        sum!(Φ_x_sum, Φ_x)
+        𝔼_conditional!(Θ_y, Φ_x_sum, Y, myace, sIy, bsIy)
+        stoch_normalize!(Θ_y, Θ_y)
         
         e_new = ε²(Θ_y, Φ_x)
         abs(e_old - e_new) ≤ myace.errorbound && break
@@ -155,7 +185,7 @@ function run(myace::ACEsim{T,S}) where {T,S<:AbstractArray}
     return ACEres(
         X=X, Y=Y, Φ_x=Φ_x, Θ_y=Θ_y,
         sIx=sIx, sIy=sIy, bsIx=bsIx, bsIy=bsIy,
-        conv_err=conv_err,
+        conv_err=view(conv_err, 1:conv_err_idx),
         r_orig=cor(X, Y), r²=cor(Φ_x, Θ_y),
         ρ=ε²(Φ_x, Θ_y),
         AARD=100.0/length(X) * sum(abs.(X .- Y) ./ abs.(Y)),
@@ -164,8 +194,6 @@ function run(myace::ACEsim{T,S}) where {T,S<:AbstractArray}
         accuracy=myace.errorbound
     )
 end
-
-
 
 # Plot recipie.
 @recipe function f(bf::ACEres; transform=false, full=true, dpi=500, plotsize=2.0 .* (1200, 800))

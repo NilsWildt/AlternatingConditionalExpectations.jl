@@ -1,6 +1,8 @@
 module Smoothers
+using DispatchDoctor
 export Smoother, LAS, LASb, LLSS, LLSSb, do_smoothing, loocv, FRSS
 using Statistics, LinearAlgebra
+
 include("Kernelregression/Kernelregression.jl")
 using .Kernelregression
 """
@@ -11,7 +13,7 @@ abstract type Smoother end
 """
 Validates and sanitizes input data for smoothing operations
 """
-function validate_inputs(x::AbstractArray{T}, y::AbstractArray{T}, window::Int64) where T<:Real
+@stable function validate_inputs(x::AbstractArray{T}, y::AbstractArray{T}, window::Int64) where T<:Real
     length(x) == length(y) || throw(DimensionMismatch("x and y must have same length"))
     window > 0 || throw(ArgumentError("Window size must be positive"))
     window < length(x) || throw(ArgumentError("Window size must be less than data length"))
@@ -43,7 +45,7 @@ end
 """
 Performs Local Average Smoothing (LAS)
 """
-function do_smoothing(x::AbstractArray{T}, y::AbstractArray{T}, smoother::V) where {T<:Real, V<:LAS}
+@stable function do_smoothing(x::AbstractArray{T}, y::AbstractArray{T}, smoother::V) where {T<:Real, V<:LAS}
     k = validate_inputs(x, y, smoother.window)
     n = length(y)
     result = zeros(Float64, n)
@@ -58,23 +60,31 @@ end
 """
 Performs Local Average Smoothing with boundary adjustment (LASb)
 """
-function do_smoothing(x::AbstractArray{T}, y::AbstractArray{T}, smoother::V) where {T<:Real, V<:LASb}
+@stable function do_smoothing(x::AbstractArray{T}, y::AbstractArray{T}, smoother::V) where {T<:Real, V<:LASb}
     k = validate_inputs(x, y, smoother.window)
     n = length(y)
-    result = zeros(Float64, n)
+    result = Vector{T}(undef, n)
     
-    for i in 1:n
-        left = max(1, i-k)-min(0, n-i-k+1):i
-        right = i+1:min(i+k, n)+min(0, i-k)
-        result[i] = mean(vcat(y[left], y[right]))
+    @inbounds for i in 1:n
+        left_start = max(1, i-k)-min(0, n-i-k+1)
+        right_end = min(i+k, n)+min(0, i-k)
+        sum_val = zero(T)
+        count = 0
+        
+        @simd for j in left_start:right_end
+            sum_val += y[j]
+            count += 1
+        end
+        
+        result[i] = sum_val / count
     end
     return result
 end
 
 """
-Helper function for linear regression calculations
+Helper @stable function for linear regression calculations
 """
-function linear_regression(x::AbstractArray{T}, y::AbstractArray{T}, xi::T) where T<:Real
+@stable function linear_regression(x::AbstractArray{T}, y::AbstractArray{T}, xi::T) where T<:Real
     xm, ym = mean(x), mean(y)
     C = sum((x .- xm) .* (y .- ym))
     V = sum((x .- xm) .^ 2)
@@ -87,7 +97,7 @@ end
 """
 Performs Local Linear Smoothing (LLSS)
 """
-function do_smoothing(x::AbstractArray{T}, y::AbstractArray{T}, smoother::V) where {T<:Real, V<:LLSS}
+@stable function do_smoothing(x::AbstractArray{T}, y::AbstractArray{T}, smoother::V) where {T<:Real, V<:LLSS}
     k = validate_inputs(x, y, smoother.window)
     n = length(y)
     result = zeros(T, n)
@@ -102,7 +112,7 @@ end
 """
 Performs Local Linear Smoothing with boundary adjustment (LLSSb)
 """
-function do_smoothing(x::AbstractArray{T}, y::AbstractArray{T}, smoother::V) where {T<:Real, V<:LLSSb}
+@stable function do_smoothing(x::AbstractArray{T}, y::AbstractArray{T}, smoother::V) where {T<:Real, V<:LLSSb}
     k = validate_inputs(x, y, smoother.window)
     n = length(y)
     result = zeros(T, n)
@@ -120,7 +130,7 @@ end
 """
 Performs Leave-One-Out Cross-Validation
 """
-function loocv(x::AbstractArray{T}, y::AbstractArray{T}, smoother::Smoother) where {T<:Real}
+@stable function loocv(x::AbstractArray{T}, y::AbstractArray{T}, smoother::Smoother) where {T<:Real}
     k = validate_inputs(x, y, smoother.window)
     n = length(x)
     ysmoothed = do_smoothing(x, y, smoother)
@@ -148,12 +158,12 @@ mutable struct FRSS <: Smoother
     medium_J::Float64
     final_J::Float64
     
-    function FRSS(inJs, medJ, finalJ)
+    @stable function FRSS(inJs, medJ, finalJ)
         new(sort(unique(inJs)), medJ, finalJ)
     end
 end
 
-function perform_initial_smoothing(x::T, y::T, smoother::FRSS, Nx::Int, standardsmooth) where {T<:AbstractVecOrMat}
+@stable function perform_initial_smoothing(x::T, y::T, smoother::FRSS, Nx::Int, standardsmooth) where {T<:AbstractVecOrMat}
     initial_Js_array = repeat(smoother.initial_Js', Nx, 1)
     initial_smooth = zeros(Float64, Nx, length(smoother.initial_Js))
     initial_cv_residuals = zeros(Float64, Nx, length(smoother.initial_Js))
@@ -166,19 +176,13 @@ function perform_initial_smoothing(x::T, y::T, smoother::FRSS, Nx::Int, standard
     return initial_Js_array, initial_smooth, initial_cv_residuals
 end
 
-function smooth_residuals(x::T, initial_cv_residuals::Matrix{Float64}, 
-                         smoother::FRSS, Nx::Int, standardsmooth) where {T<:AbstractVecOrMat}
-    initial_residuals_smoothed = zeros(Float64, size(initial_cv_residuals))
-    lin_smoother = standardsmooth(smoother.medium_J * Nx)
-    
-    @inbounds @simd for i in 1:size(initial_cv_residuals, 2)
-        initial_residuals_smoothed[:, i] = do_smoothing(x, initial_cv_residuals[:, i], lin_smoother)
-    end
-    
-    return initial_residuals_smoothed
+@stable function smooth_residuals(x, residuals, smoother, Nx)
+    lin_smoother = LLSSb(smoother.medium_J * Nx)
+    return mapslices(col -> do_smoothing(x, col, lin_smoother), 
+                    residuals, dims=1)
 end
 
-function interpolate_smooth(x::T, initial_smooth::Matrix{Float64}, smoothed_best_Js::AbstractArray, 
+@stable function interpolate_smooth(x::T, initial_smooth::Matrix{Float64}, smoothed_best_Js::AbstractArray, 
                           smoother::FRSS, Nx::Int) where {T<:AbstractVecOrMat}
     interpolated_smooth = zeros(Float64, Nx, 1)
     
@@ -196,7 +200,7 @@ function interpolate_smooth(x::T, initial_smooth::Matrix{Float64}, smoothed_best
     return interpolated_smooth
 end
 
-function do_smoothing(x::T, y::T, smoother::V) where {T<:AbstractVecOrMat, V<:FRSS}
+@stable function do_smoothing(x::T, y::T, smoother::V) where {T<:AbstractVecOrMat, V<:FRSS}
     Nx = length(x)
     standardsmooth = LLSSb
 
@@ -231,14 +235,14 @@ Base.String(frss::FRSS) = "Smoothed_FRSS"
 
 
 # In case, we gave it several smoothers, do them in this order every time
-function do_smoothing(x::AbstractVecOrMat, y::AbstractVecOrMat, smoothers::Array{<:Smoother})
+@stable function do_smoothing(x::AbstractVecOrMat, y::AbstractVecOrMat, smoothers::Array{<:Smoother})
     for sm in smoothers::Vector{Smoother}
         y = do_smoothing(x, y, sm)
     end
     return y
 end
 
-function do_smoothing!(out, x::AbstractVecOrMat, y::AbstractVecOrMat, smoothers::Array{<:Smoother})
+@stable function do_smoothing!(out, x::AbstractVecOrMat, y::AbstractVecOrMat, smoothers::Array{<:Smoother})
     for sm in smoothers::Vector{Smoother}
         do_smoothing!(out, x, y, sm)
         y .= out
@@ -252,7 +256,7 @@ mutable struct Kernelsmooth <: Smoother
 end
 
 
-function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::Kernelsmooth)
+@stable function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::Kernelsmooth)
     # x, y =   _sanitizeinput(x, y)
     x = Array{Float64,1}(x)
     y = Array{Float64,1}(y)
@@ -265,7 +269,7 @@ end
 
 
 
-function do_smoothing!(out, x::Vector{Float64}, y::VecOrMat{Float64}, smoother::Kernelsmooth)
+@stable function do_smoothing!(out, x::Vector{Float64}, y::VecOrMat{Float64}, smoother::Kernelsmooth)
     # x, y =   _sanitizeinput(x, y)
     x = Array{Float64,1}(x)
     y = Array{Float64,1}(y)
@@ -276,7 +280,7 @@ function do_smoothing!(out, x::Vector{Float64}, y::VecOrMat{Float64}, smoother::
     out .= kInterpolant(xeval)
 end
 
-function Base.String(ks::Kernelsmooth)
+@stable function Base.String(ks::Kernelsmooth)
     try
         string("Smoothed_Mercer_", String(ks.smoothk), "($(ks.smoothk.σ))")
     catch
@@ -292,7 +296,7 @@ mutable struct NWKernelsmooth <: Smoother
     smoothk::SKernel
 end
 
-function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::NWKernelsmooth)
+@stable function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::NWKernelsmooth)
     # x, y =   _sanitizeinput(x, y)
     Nx = length(x)
 
@@ -305,7 +309,7 @@ function do_smoothing(x::Vector{Float64}, y::VecOrMat{Float64}, smoother::NWKern
     return retval
 end
 
-function do_smoothing!(out,x::Vector{Float64}, y::VecOrMat{Float64}, smoother::NWKernelsmooth)
+@stable function do_smoothing!(out,x::Vector{Float64}, y::VecOrMat{Float64}, smoother::NWKernelsmooth)
     # x, y =   _sanitizeinput(x, y)
     Nx = length(x)
 
@@ -317,7 +321,7 @@ function do_smoothing!(out,x::Vector{Float64}, y::VecOrMat{Float64}, smoother::N
 end
 
 
-function Base.String(ks::NWKernelsmooth)
+@stable function Base.String(ks::NWKernelsmooth)
     try
         string("Smoothed_NW_", String(ks.smoothk), "($(round(ks.smoothk.σ;digits = 4)))")
     catch
@@ -326,7 +330,7 @@ function Base.String(ks::NWKernelsmooth)
 end
 
 
-function guess_parameters!(Y::Array{Float64}, mysmoother::NWKernelsmooth)
+@stable function guess_parameters!(Y::Array{Float64}, mysmoother::NWKernelsmooth)
     N = length(Y)
     try
         smoother.smoothk.σ = 0.9 * minimum(std(Y), iqr(Y) / 1.34) * N^(-1 / 5) # ((4 * std(Y)^5) / (3 * N)).^(1 / 5)

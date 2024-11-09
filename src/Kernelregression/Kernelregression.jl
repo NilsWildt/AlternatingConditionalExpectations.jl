@@ -4,7 +4,7 @@ module Kernelregression
 using LinearAlgebra
 using StaticArrays
 abstract type SKernel end
-export get_kernel_interpolant, SKernel
+export get_kernel_interpolant, SKernel, NWKernelsmooth
 
 
 include("k_gaussian.jl")

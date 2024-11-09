@@ -35,7 +35,6 @@ smoother =ACE.Smoothers.LASb(Nk ÷  24)
 Simulation1 = ACE.ACEsim(Matrix(Benchmark.X),Matrix(Benchmark.Y),smoother)
 result = @timeit  "acetotal" ACE.run(Simulation1)
 
-
 # @info "results:" 1-result.r²[1] result.r²[1] 1-result.ρ result.ρ result.AARD result.r_orig result.t
 
 
