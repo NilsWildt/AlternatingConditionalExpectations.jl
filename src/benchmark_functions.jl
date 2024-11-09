@@ -2,7 +2,7 @@ using Random
 using DocStringExtensions
 using Documenter
 using Plots 
-using StatsPlots
+# using StatsPlots
 using LaTeXStrings
 using Latexify
 using PrettyTables

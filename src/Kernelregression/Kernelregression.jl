@@ -2,7 +2,6 @@ module Kernelregression
 # Defines different kernels that can be used for regularized kernel interpolation (kernel regression)
 # Using: Approximation with Kernel Methods WS 17/18 by Dr. Gabriele Santin & Prof. Haasdonk, Univ. of Stuttgart
 using LinearAlgebra
-using Revise
 using StaticArrays
 abstract type SKernel end
 export get_kernel_interpolant, SKernel

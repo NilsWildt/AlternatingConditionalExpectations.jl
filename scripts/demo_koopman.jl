@@ -14,6 +14,9 @@ using .Smoothers
 # using Suppressor
 using TimerOutputs
 
+function vec_to_matrix(x::AbstractArray{T}) where T<:Real
+    return reshape(x,length(x),1)
+end
 # const to = TimerOutput()
 # ENV["JULIA_DEBUG"] = "all"
 # Initalize Plot backend
@@ -23,16 +26,17 @@ include(srcdir("utils.jl"))
 include(srcdir("benchmark_functions.jl"))
 ########################################################################
 ########################################################################
-Nk = 500 # Problem size 
-Benchmark =  f_b1(Nk, 1, "uniform", 1.0, 1.0, true, 42, true, (-5.0, 1.4))
+f(x) = x^2
+x = collect(range(0,10,length=100))
+xdot = f.(x)
 # display(plot(Benchmark.X,Benchmark.Y,dpi=80))
-s1 =Smoothers.FRSS([0.05,0.1,0.5], 0.2, 0.2)
-smoother =ACE.Smoothers.LASb(Nk ÷  24)
-# smoother = Array{Smoother}([smoother])
+s1 =ACE.Smoothers.FRSS([0.05,0.1,0.5], 0.2, 0.2)
+smoother =ACE.Smoothers.LASb(length(xdot) ÷  24)
+smoother = Array{ACE.Smoothers.Smoother}([s1,smoother])
 # σ = 0.03
 # mykernel =Kernelregression.Gaussian(σ)
 # smoother =  Array{ACE.Smoother}([ACE.NWKernelsmooth(mykernel)])
-Simulation1 = ACE.ACEsim(Matrix(Benchmark.X),Matrix(Benchmark.Y),smoother)
+Simulation1 = ACE.ACEsim(Matrix(x|>vec_to_matrix),Matrix(xdot|>vec_to_matrix),smoother)
 result = @timeit  "acetotal" ACE.run(Simulation1)
 
 
@@ -41,7 +45,7 @@ result = @timeit  "acetotal" ACE.run(Simulation1)
 
 if !isnan.(result.r²[1])
         plotly()
-  display(plot(result,dpi=80,size=(1200,899)))
+  display(plot(result,dpi=80,size=(1200,500)))
 else
         @error "" result.r²[1] result.ρ result.Φ_x, result.Θ_y
 end
