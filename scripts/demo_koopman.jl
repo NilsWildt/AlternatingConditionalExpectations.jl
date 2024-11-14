@@ -27,17 +27,17 @@ include(srcdir("utils.jl"))
 include(srcdir("benchmark_functions.jl"))
 ########################################################################
 ########################################################################
-f(x) =exp(x^3)
-x = collect(range(0,1,length=500))
+f(x) = x^2
+x = collect(range(1,10,length=500))
 xdot = f.(x)
 # display(plot(Benchmark.X,Benchmark.Y,dpi=80))
 # s1 =ACE.Smoothers.FRSS([0.05,0.1,0.5], 0.2, 0.2)
-smoother =ACE.Smoothers.LASb(length(xdot) ÷  12)
+smoother =ACE.Smoothers.LASb(length(xdot) ÷  2)
 # smoother = Array{ACE.Smoothers.Smoother}([s1,smoother])
 # σ = 0.03
 # mykernel = Kernelregression.Gaussian(σ)
 # smoother =  Array{ACE.Smoothers.Smoother}([ACE.NWKernelsmooth(mykernel)])
-Simulation1 = ACE.ACEsim(Matrix(x|>vec_to_matrix),Matrix(xdot|>vec_to_matrix),smoother;multiloopversion=:fresh,itermax_inner=10,itermax_outer=10,errorbound=1e-3)
+Simulation1 = ACE.ACEsim(Matrix(x|>vec_to_matrix),Matrix(xdot|>vec_to_matrix),smoother;multiloopversion=:fresh,itermax_inner=100,itermax_outer=100,errorbound=1e-5)
 # @profile for i in 1:10
 #  ACE.run(Simulation1)
 # end
@@ -49,8 +49,8 @@ result = @timeit to "acetotal" ACE.run(Simulation1)
 # Profile.print()
 
 if !isnan.(result.r²[1])
-        plotly()
-  display(plot(result,dpi=80,size=(1200,500)))
+        # plotly()
+  display(plot(result,dpi=80,size=(1800,900)))
 else
         @error "" result.r²[1] result.ρ result.Φ_x, result.Θ_y
 end

@@ -19,7 +19,7 @@ using LinearAlgebra
 using StatsBase 
 using DispatchDoctor
 using ConcreteStructs
-
+using LaTeXStrings
 
 
 include("Kernelregression/Kernelregression.jl")
@@ -96,6 +96,14 @@ end
     out .= outm[bindx]
 end
 
+@stable function 𝔼_conditional(Y, X, myace::ACEsim, sindx, bindx)
+    X_vec = reshape(X,:) #vec(X)
+    Y_vec = reshape(Y,:) #vec(Y)
+    X_sorted = @view X_vec[sindx]
+    Y_sorted = @view Y_vec[sindx]
+    return Smoothers.do_smoothing(X_sorted, Y_sorted, myace.smoother)[bindx]
+end
+
 @stable function ε²(Φ_x::AbstractArray, Θ_y::AbstractArray)::Float64
     err = StatsBase.mean((Θ_y .- sum(Φ_x, dims=2)) .^ 2)
     return err / var(Θ_y)
@@ -154,11 +162,9 @@ end
         for j in 1:myace.itermax_inner
             e_old = e_new
             myace.multiloopversion == :fresh && (Φ_x .= 0.0)
-            
             for k in 1:m_parameter
                 sum_wo_theta!(θ_without_Φ_k, Θ_y, Φ_x, k)
-                𝔼_conditional!(view(Φ_x, :, k), θ_without_Φ_k, X[:,k], myace, sIx[:,k], bsIx[:,k])
-                
+                Φ_x[:,k] .= 𝔼_conditional(θ_without_Φ_k, X[:,k], myace, sIx[:,k], bsIx[:,k])
                 # Use preallocated array for mean calculation
                 col_view = view(Φ_x, :, k)
                 temp_mean[k] = sum(col_view) / length(col_view)
@@ -195,20 +201,13 @@ end
     )
 end
 
-# Plot recipie.
-@recipe function f(bf::ACEres; transform=false, full=true, dpi=500, plotsize=2.0 .* (1200, 800))
-    #       if length(bf.X) == 0  | | !(typeof(bf.X) <: AbstractVector) ||
-    #         !(typeof(bf.Φ_x) <: AbstractVector)
-    #         error("Benchmark has wrong dimensions, or ACE solution wasn't set yet.  Got: $(typeof(bf))")
-    #     end
 
+
+@recipe function f(bf::ACEres; transform=false, full=true, dpi=500, plotsize=2.0 .* (1200, 800))
     markershape --> :circle
     markersize --> 2
-    # # set up the subplots
     link --> :none
     size --> plotsize
-    xguide --> "x"
-    yguide --> "y"
     margin --> 20Plots.px
 
     if full
@@ -217,35 +216,21 @@ end
         Φ_x = bf.Φ_x
         Θ_y = bf.Θ_y
 
-        # # remove nan:
-
-        # X[isnan.(X)] .= 0.0 #  -Inf64
-        # Y[isnan.(Y)] .= 0.0 #  -Inf64
-        # Φ_x[isnan.(Φ_x)] .= 0.0 #  -Inf64
-        # Θ_y[isnan.(Θ_y)] .= 0.0 #  -Inf64
-
-        #! Add some catching NaNs!
-
-
         plot_view_bounds = bf.plot_view_bounds
         plot_fcs = bf.plot_fcs
-
         n = size(X, 2)
 
-
-        # framestyle := [:shared :shared :shared :shared]
         grid := false
-        layout := @layout [a{0.05h}; grid(3, n) b{0.3w}; c{0.1h}] # ;b{0.2h}
+        layout := @layout [a{0.05h}; grid(3, n) b{0.5w}; c{0.1h}]
         seriestype := :scatter
         background_color := RGB(0.2, 0.2, 0.2)
         dpi := dpi
         colorbar := false
         legend := false
-
         markerstrokewidth := 0
+
         e2 = string(round(abs((ε²(Φ_x[bf.sIx], Θ_y[bf.sIy]))); digits=4))
-        @show bf
-        mytit = join(["\nACE result:\n", "ε² = $e2 "])
+        mytit = L"ACE result: \varepsilon^2 = " * e2
         title := mytit
 
         # Header (subplot 1)
@@ -255,86 +240,71 @@ end
             subplot := 1
         end
 
-        # Main grid (subplots 2 to 3n+1)
+        # First row (X vs Y)
         for i in 1:Int64(n)
             @series begin
                 seriestype := :scatter
                 title := ""
-                xguide := "X$i"
-                yguide := "Y"
+                xguide := L"X_{%$i}"
+                yguide := L"Y"
                 subplot := i + 1
-                # xlims := plot_view_bounds[1][1]
-                # ylims:= plot_view_bounds[1][2]
                 X[:, i], Y
             end
         end
-        #second row 
+
+        # Second row (X vs Φ(X))
         for i in 1:Int64(n)
             @series begin
                 seriestype := :scatter
                 title := ""
-                xlabel --> "X"
-                ylabel --> "Φ(X$i)"
-                # xlims := plot_view_bounds[2][1]
-                # ylims:= plot_view_bounds[2][2]
+                xlabel --> L"X_{%$i}"
+                ylabel --> L"\Phi(X_{%$i})"
                 subplot := n + 1 + i
                 X[:, i], Φ_x[:, i]
             end
         end
 
-        # Last row
+        # Third row (Φ(X) vs Θ(Y))
         for i in 1:Int64(n)
             @series begin
                 title := ""
-                xlabel --> "Φ(X$i)"
-                ylabel --> "Θ(Y)"
-                # xlims := plot_view_bounds[4][1]
-                # ylims:= plot_view_bounds[4][2]
+                xlabel --> L"\Phi(X_{%$i})"
+                ylabel --> L"\Theta(Y)"
                 subplot := 2 * n + 1 + i
                 Φ_x[:, i], Θ_y
-
             end
         end
 
-
+        # Y vs Θ(Y) plot
         @series begin
             title := ""
-            xlabel --> "Y"
-            ylabel --> "Θ(Y)"
-            #    xlims := plot_view_bounds[3][1]
-            # ylims:= plot_view_bounds[3][2]
+            xlabel --> L"Y"
+            ylabel --> L"\Theta(Y)"
             subplot := 3 * n + 1 + 1
             Y, Θ_y
-
         end
 
-
+        # Convergence plot
         @series begin
             seriestype := :scatter
             markersize := 3
             title := ""
-            xlabel --> "Iterations"
-            ylabel --> "ε"
+            xlabel --> L"Iterations"
+            ylabel --> L"\varepsilon"
             subplot := 3 * n + 1 + 1 + 1
             Array{Float64}(collect(1:length(bf.conv_err))), Array{Float64}(bf.conv_err)
         end
 
-
     else
-
         if transform && length(bf.Φ_x) != 0
             x := bf.Φ_x
             y := bf.Θ_y
-
         else
             x := bf.X
             y := bf.Y
         end
     end
-    # ()
 end
-
-
 
 
 end
