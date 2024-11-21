@@ -49,7 +49,7 @@ result = @timeit to "acetotal" ACE.run(Simulation1)
 # Profile.print()
 
 if !isnan.(result.r²[1])
-        # plotly()
+        plotly()
   display(plot(result,dpi=80,size=(1800,900)))
 else
         @error "" result.r²[1] result.ρ result.Φ_x, result.Θ_y
