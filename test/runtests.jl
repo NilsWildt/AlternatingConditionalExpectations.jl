@@ -24,6 +24,88 @@ import Main.ACE
        dims = (N, 1)
   return abs(ub - lb) .* (rand(rng,  Float64, dims)) .+ lb
     end
+
+
+    @testset "Kernelregression (extended)" begin
+        Random.seed!(42)
+        X = rand(10, 2)
+        Ysmall = rand(5, 2)
+        σ = 1.0
+        reg = 1.0e-6
+
+        # Kernel constructions
+        g = Kernelregression.Gaussian(σ)
+        i = Kernelregression.Imq(σ)
+        @test g.σ == σ
+        @test i.σ == σ
+        @test typeof(g) <: Kernelregression.SKernel
+        @test typeof(i) <: Kernelregression.SKernel
+
+        # Kernel matrices
+        Kg = Kernelregression.evalKmatrix(g, X, Ysmall)
+        Ki = Kernelregression.evalKmatrix(i, X, Ysmall)
+        @test size(Kg) == (10, 5)
+        @test size(Ki) == (10, 5)
+        @test all(isfinite, Kg)
+        @test all(isfinite, Ki)
+
+        # Kernel derivatives
+        dKg = Kernelregression.evalKmatrix_derivative(g, X, Ysmall)
+        dKi = Kernelregression.evalKmatrix_derivative(i, X, Ysmall)
+        @test size(dKg) == (10, 5)
+        @test size(dKi) == (10, 5)
+        @test all(isfinite, dKg)
+        @test all(isfinite, dKi)
+
+        # Interpolants
+        Y = rand(10, 1)
+        f_g = Kernelregression.get_kernel_interpolant(X, Y, g, reg)
+        f_i = Kernelregression.get_kernel_interpolant(X, Y, i, reg)
+        Xtest = rand(5, 2)
+        Yg = f_g(Xtest)
+        Yi = f_i(Xtest)
+        @test size(Yg) == (5, 1)
+        @test size(Yi) == (5, 1)
+        @test all(isfinite, Yg)
+        @test all(isfinite, Yi)
+
+        # Derivative interpolants
+        fd_g = Kernelregression.get_kernel_derivative_interpolant(X, Y, g, reg)
+        fd_i = Kernelregression.get_kernel_derivative_interpolant(X, Y, i, reg)
+        Ydg = fd_g(Xtest)
+        Ydi = fd_i(Xtest)
+        @test size(Ydg) == (5, 1)
+        @test size(Ydi) == (5, 1)
+        @test all(isfinite, Ydg)
+        @test all(isfinite, Ydi)
+
+        # Pairwise distances
+        D2 = Kernelregression.pDist2Squared(X, Ysmall)
+        D = Kernelregression.pDist2(X, Ysmall)
+        @test size(D2) == (10, 5)
+        @test size(D) == (10, 5)
+        @test all(isfinite, D2)
+        @test all(isfinite, D)
+        @test all(≥(0), D2)
+        @test all(≥(0), D)
+
+        # Type stability checks
+        @test @inferred Kernelregression.evalKmatrix(g, X, Ysmall) isa Matrix{Float64}
+        @test @inferred Kernelregression.evalKmatrix(i, X, Ysmall) isa Matrix{Float64}
+        @test @inferred Kernelregression.evalKmatrix_derivative(g, X, Ysmall) isa Matrix{Float64}
+        @test @inferred Kernelregression.evalKmatrix_derivative(i, X, Ysmall) isa Matrix{Float64}
+        @test @inferred Kernelregression.pDist2Squared(X, Ysmall) isa Matrix{Float64}
+        @test @inferred Kernelregression.pDist2(X, Ysmall) isa Matrix{Float64}
+
+        # Marginal log likelihood
+        θ = [σ]
+        ll_g = Kernelregression.marginal_log_likelihood(θ, X, rand(10, 3), Kernelregression.Gaussian)
+        ll_i = Kernelregression.marginal_log_likelihood(θ, X, rand(10, 3), Kernelregression.Imq)
+        @test isfinite(ll_g)
+        @test isfinite(ll_i)
+    end
+
+    
     function generate_multivariate_data(N = 200, σ_x1 = 1.0, σ_x2 = 1.0, σ_noise = 1.0, vargs...)
     rng = []
     if length(vargs) > 0

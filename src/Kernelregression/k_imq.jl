@@ -8,13 +8,13 @@ K(x,y) = sqrt()
 scaling factor ``sigma``.
 """
 
-mutable struct Imq{T <: Real} <: SKernel
+@concrete struct Imq{T <: Real} <: SKernel
     "Scaling"
     σ::T
 end
 
 # Constructor of the struct above.
-Imq(σ::T) where T = Imq{T}(σ, [])
+Imq(σ::T) where {T} = Imq{T}(σ)
 _evalKmatrix(imq::Imq, xy_dist) = @fastmath (ones(size(xy_dist)) .+ imq.σ.^(-2) .* xy_dist).^(-0.5)
 function evalKmatrix(imq::Imq, x::AbstractArray, y::AbstractArray)
     xy_dist = pDist2Squared(x, y)

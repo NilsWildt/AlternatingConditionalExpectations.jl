@@ -10,13 +10,13 @@ K(x,y) = exp(-1/sigma^2 cdot ||x-y||^2)
 scaling factor ``sigma``.
 """
 
-mutable struct Gaussian{T <: Real} <: SKernel
+@concrete struct Gaussian{T <: Real} <: SKernel
     "Scaling"
     σ::T
 end
 
 # Constructor of the struct above.
-Gaussian(σ::T) where T = Gaussian{T}(σ, [])
+Gaussian(σ::T) where {T} = Gaussian{T}(σ)
 
 _evalKmatrix(gaussian::Gaussian, xy_dist) = @fastmath @.  exp(-1. / (2. .* gaussian.σ^2 ) * xy_dist)
 
