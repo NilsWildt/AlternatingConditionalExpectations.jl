@@ -2,6 +2,16 @@
 *.jl.*.cov
 *.jl.mem
 /Manifest.toml
+
+# tooling caches
+.rank-cache.sqlite
+.rank-cache.sqlite-shm
+.rank-cache.sqlite-wal
+
+# ResilioSync artifacts
+*.rsls
+*.rslsz
+*.mem.rsls
 /deps/deps.jl
 /docs/build
 /docs/Manifest.toml
