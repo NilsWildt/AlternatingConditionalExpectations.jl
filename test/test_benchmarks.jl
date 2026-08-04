@@ -33,3 +33,15 @@ end
     @test all(isfinite, res.Φ_x)
     @test res.ρ < 0.6
 end
+
+@testitem "all benchmarks construct (scaled) and run" begin
+    for F in (ACE.f_b1, ACE.f_b2, ACE.f_b3, ACE.f_b4, ACE.f_toy)
+        # scale_data=true exercises the normalization branches
+        bf = F(200, 1, "uniform", 1.0, 0.3, true, 42, true, (-5.0, 1.4))
+        @test all(0 .<= vec(bf.X) .<= 1)
+        @test all(0 .<= vec(bf.Y) .<= 1)
+        res = ACE.run(ACE.ACEsim(Matrix(bf.X), Matrix(bf.Y), ACE.LASb(15)))
+        @test all(isfinite, res.Φ_x)
+        @test all(isfinite, res.Θ_y)
+    end
+end

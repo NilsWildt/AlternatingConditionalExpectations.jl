@@ -87,6 +87,8 @@ end
     yhat = y .+ 0.01
     @test ACE.RMSE(y, yhat) ≈ 0.01 atol = 1e-12
     @test ACE.MAE(y, yhat) ≈ 0.01 atol = 1e-12
+    @test ACE.pErr(y, yhat) ≈ 0.0001 atol = 1e-12
+    @test ACE.myErr(y, yhat) ≈ 0.01 atol = 1e-12
     @test isfinite(ACE.AARD(y, yhat))
     @test isfinite(ACE.UFV(y, yhat))
     @test isfinite(ACE.nMAE(y, yhat))
