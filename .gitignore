@@ -12,6 +12,9 @@
 *.rsls
 *.rslsz
 *.mem.rsls
+
+# demo outputs
+/output/
 /deps/deps.jl
 /docs/build
 /docs/Manifest.toml

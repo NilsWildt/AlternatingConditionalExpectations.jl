@@ -1,57 +1,33 @@
-# Copyright (c) 2021 NilsWildt
-# 
-# This software is released under the MIT License.
-# https://opensource.org/licenses/MIT
-# Load Packages
-using DrWatson
-@quickactivate "ACE"
-using .ACE
+# Smoother comparison demo.
+#
+# Run with:  julia --project=. scripts/demoSmooth2d.jl
+# Saves:     output/demosmooth2d_comparison.png
+using ACE
+using LocalSmoothers
 using Plots
-# ENV["JULIA_DEBUG"] = "all"
-# Initalize Plot backend
-gr()
-# Add utils and Benchmarksuite
-include(srcdir("utils.jl"))
-include(srcdir("benchmark_functions.jl"))
+ENV["GKSwstype"] = "100"  # headless
 
-function get_sortidx(X::T where T <:  AbstractArray)::Tuple{Vector{Int64},Vector{Int64}}
-    N = length(X)
-    # We always only look at the first dimension.
-    # @infiltrate
-    sort_idx =  sortperm(X) # Weill can't Sortperm on SArray
-    sort_idx_back = zeros(Int64, (N,))
-    sort_idx_back[sort_idx] = 1:N
-    return Array{Int64,1}(sort_idx[:]), Array{Int64,1}(sort_idx_back[:])
+outdir = joinpath(@__DIR__, "..", "output")
+mkpath(outdir)
+
+n = 400
+x = collect(range(0.0, 4.0, length=n))
+y = sin.(x) .+ 0.2 .* randn(n)
+
+p = scatter(x, y; label = "data", markersize = 1.5, alpha = 0.4, size = (900, 500))
+smoothers = [
+    "LAS"  => LAS(41),
+    "LASb" => LASb(41),
+    "LLSS" => LLSS(41),
+    "LLSSb" => LLSSb(41),
+    "FRSS" => FRSS([0.05, 0.1, 0.5], 0.2, 0.2),
+    "NW"   => NWKernelsmooth(Gaussian(0.3)),
+]
+for (label, sm) in smoothers
+    ys = do_smoothing(x, y, sm)
+    plot!(p, x, ys; label = label, linewidth = 2)
 end
- 
-########################################################################
-########################################################################
-# @time begin
-Nk = 500 # Problem size 
-Benchmark =  f_b1(Nk, 1, "uniform", 1.0, 1.0, false, 42, false, (-2.0, 1.4))
-X = vec(Benchmark.X)
-Y = vec( Benchmark.Y)
-# display(plot(Benchmark.X,Benchmark.Y,dpi=80))
-@info "Dbg" Nk ÷  7
-# smoother = ACE.LAS(Nk ÷  25)
-# smoother = Array{Smoother}([ACE.FRSS([0.05,0.1,0.5], 0.2, 0.2)])
-σ = .2
-mykernel = ACE.Kernelregression.Gaussian(σ)
-smoother =  Array{Smoother}([ACE.NWKernelsmooth(mykernel)])
-# Simulation1 =  ACE.ACEsim(Matrix(Benchmark.X),Matrix(Benchmark.Y),smoother)
-# result = ACE.run(Simulation1)
-sIx, bsIx = get_sortidx(X)
-    # SOrt response variables
-sIy, bsIy = get_sortidx(vec(Y))
-Ysmooth  =ACE.do_smoothing(X[sIx],Y[sIx], smoother)[bsIx]
 
-# if !any(isnan.(Ysmooth))
-        # gr()
-        plotly()
-        h1 = plot( sort_two_arrays_native(X,Ysmooth),dpi=200,lw=5)
-        scatter!(h1,X,Y,alpha=0.09)
-# else
-#         @error "Sucks."
-# end
-
-
+path = joinpath(outdir, "demosmooth2d_comparison.png")
+savefig(p, path)
+println("saved -> ", path)
