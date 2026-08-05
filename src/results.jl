@@ -38,8 +38,22 @@ Base.@kwdef @concrete struct ACEres
     t::Float64
     itercount::Int64
     accuracy::Float64
+    converged::Bool = true
     description::String = "ACE_simulation_result"
 end
+
+# Friendly aliases: `model.tx`/`ty` for the fitted transforms, `rsq` for the
+# coefficient of determination (1 − unexplained variance `ρ`), `iters` for the
+# iteration count. Real fields fall through to `getfield`.
+function Base.getproperty(r::ACEres, s::Symbol)
+    s === :tx && return getfield(r, :Φ_x)
+    s === :ty && return getfield(r, :Θ_y)
+    s === :rsq && return 1 - getfield(r, :ρ)
+    s === :iters && return getfield(r, :itercount)
+    return getfield(r, s)
+end
+
+Base.propertynames(::ACEres) = (fieldnames(ACEres)..., :tx, :ty, :rsq, :iters)
 
 """
     ACEsim(X, Y, smoother; errorbound, itermax_inner, itermax_outer, multiloopversion)

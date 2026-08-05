@@ -33,18 +33,33 @@ Pkg.add(url = "https://github.com/NilsWildt/ACE.jl")
 using ACE
 
 # 200 samples of a noisy bivariate relationship
-X, Y = ACE.generate_bivariate_data(Float64, 200, 0.1, 1.0, 42)
+X, Y = generate_bivariate_data(Float64, 200, 0.1, 1.0, 42)
 
 # fit ACE with a boundary-corrected local-average smoother (window 10)
-res = ace_run(ACEsim(X, Y, LASb(10)))
+model = ace(X, Y; smoother = LASb(10))
+model.tx        # φ, the predictor transforms
+model.ty        # θ, the response transform
+model.rsq       # coefficient of determination
+predict(model, X)                     # transformed-response fit for new data
+
+# AVAS (Tibshirani 1988): variance-stabilizing variant, monotone response
+avas(X, Y; smoother = LASb(10))
+
+# constrain individual variables
+ace(X, Y; smoother = LASb(10), xtransforms = Monotone(LASb(10)))
 
 # dark-theme diagnostic grid + convergence history
-plot_ace_results(res; savepath = "ace_result.png")
+plot_ace_results(model; savepath = "ace_result.png")
 ```
+
+`ace_run(ACEsim(...))` and `avas_run(...)` remain as thin compatibility shims.
+
+Per-variable transforms: `Smooth` (default), `Monotone` (isotonic),
+`LinearFit`, `Categorical`, and `Periodic`.
 
 ## What's in the package
 
-- **Algorithm** — `ace_run` (backfitting), `stoch_normalize`, `ε²`, conditional
+- **Algorithms** — `ace` / `avas` (backfitting), `predict`, `stoch_normalize`, `ε²`, conditional
   expectations, bivariate/multivariate data generation.
 - **Smoothers** — re-exported from `LocalSmoothers`: `LAS`, `LASb`, `LLSS`,
   `LLSSb`, `FRSS`, `Kernelsmooth`, `NWKernelsmooth`, plus the kernel types.

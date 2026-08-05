@@ -92,11 +92,11 @@ end
 # One backfitting sweep over all predictors:
 # φₖ ← E[θ − Σ_{j≠k} φⱼ | xₖ], each centered to zero mean. Shared by the ACE
 # and AVAS response loops, which differ only in how θ(Y) is updated.
-function backfit_sweep!(Φ_x, Θ_y, θ_without_Φ_k, temp_mean, X, smoother, sIx, bsIx, multiloopversion)
+function backfit_sweep!(Φ_x, Θ_y, θ_without_Φ_k, temp_mean, X, transforms, sIx, bsIx, multiloopversion)
     multiloopversion == :fresh && (Φ_x .= 0.0)
     for k in 1:size(X, 2)
         sum_wo_theta!(θ_without_Φ_k, Θ_y, Φ_x, k)
-        Φ_x[:, k] .= 𝔼_conditional(vec(θ_without_Φ_k), vec(X[:, k]), smoother, sIx[:, k], bsIx[:, k])
+        Φ_x[:, k] .= transform_fit(transforms[k], vec(X[:, k]), vec(θ_without_Φ_k), sIx[:, k], bsIx[:, k])
         col_view = view(Φ_x, :, k)
         temp_mean[k] = sum(col_view) / length(col_view)
         col_view .-= temp_mean[k]
@@ -107,68 +107,11 @@ end
 """
     ace_run(myace::ACEsim) -> ACEres
 
-Run the ACE backfitting algorithm: alternating conditional expectations until
-the unexplained variance `ε²` stops decreasing (or iteration limits are hit).
+Run ACE from the legacy [`ACEsim`](@ref) description. Prefer [`ace`](@ref),
+which takes the data and options directly and supports per-variable transforms.
 """
-@stable function ace_run(myace::ACEsim{T,S}) where {T,S<:AbstractArray}
-    start = time()
-    X, Y = myace.X, myace.Y
-    Nx, m_parameter = size(X)
-
-    # Preallocate arrays
-    sIx = Array{Int64}(undef, Nx, m_parameter)
-    bsIx = Array{Int64}(undef, Nx, m_parameter)
-    for i in 1:m_parameter
-        sIx[:, i], bsIx[:, i] = get_sortidx(vec(X[:, i]))
-    end
-    sIy, bsIy = get_sortidx(vec(Y))
-
-    Θ_y = copy(Y)
-    Φ_x = copy(X)
-    θ_without_Φ_k = copy(Θ_y)
-
-    conv_err = Vector{Float64}(undef, myace.itermax_outer * myace.itermax_inner)
-    Φ_x_sum = Vector{Float64}(undef, Nx)
-    temp_mean = Vector{Float64}(undef, m_parameter)
-
-    e_old = Inf
-    e_new = ε²(Φ_x, Θ_y)
-    conv_err_idx = 0
-    totalcount = 0
-
-    for _ in 1:myace.itermax_outer
-        for _ in 1:myace.itermax_inner
-            e_old = e_new
-            backfit_sweep!(Φ_x, Θ_y, θ_without_Φ_k, temp_mean, X,
-                           myace.smoother, sIx, bsIx, myace.multiloopversion)
-
-            e_new = ε²(Φ_x, Θ_y)
-            conv_err_idx += 1
-            conv_err[conv_err_idx] = abs(e_old - e_new)
-            totalcount += 1
-
-            abs(e_old - e_new) ≤ myace.errorbound && break
-        end
-
-        # Update Θ_y: E[ΣΦ(X) | Y]
-        sum!(Φ_x_sum, Φ_x)
-        𝔼_conditional!(Θ_y, Φ_x_sum, vec(Y), myace.smoother, sIy, bsIy)
-        stoch_normalize!(Θ_y, Θ_y)
-
-        e_new = ε²(Φ_x, Θ_y)
-        abs(e_old - e_new) ≤ myace.errorbound && break
-    end
-
-    return ACEres(
-        X=X, Y=Y, Φ_x=Φ_x, Θ_y=Θ_y,
-        sIx=sIx, sIy=sIy, bsIx=bsIx, bsIy=bsIy,
-        conv_err=view(conv_err, 1:conv_err_idx),
-        r_orig=m_parameter == 1 ? [cor(vec(X[:, 1]), vec(Y))] : [cor(vec(X[:, i]), vec(Y)) for i in 1:m_parameter],
-        r²=m_parameter == 1 ? [cor(vec(Φ_x), vec(Θ_y))] : [cor(vec(Φ_x[:, i]), vec(Θ_y)) for i in 1:m_parameter],
-        ρ=ε²(Φ_x, Θ_y),
-        AARD=100.0 / length(X) * sum(abs.(X .- Y) ./ abs.(Y)),
-        t=time() - start,
-        itercount=totalcount,
-        accuracy=myace.errorbound,
-    )
+function ace_run(myace::ACEsim)
+    return ace(myace.X, myace.Y; smoother=myace.smoother,
+               errorbound=myace.errorbound, itermax_inner=myace.itermax_inner,
+               itermax_outer=myace.itermax_outer, multiloopversion=myace.multiloopversion)
 end

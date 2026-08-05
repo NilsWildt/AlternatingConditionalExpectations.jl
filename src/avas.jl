@@ -85,64 +85,8 @@ transforms as [`ace_run`](@ref), but with the response transform updated by a
 variance-stabilizing transform instead of a conditional expectation. Uses the
 smoother carried by `myace` for both the backfitting and the variance step.
 """
-@stable function avas_run(myace::ACEsim{T,S}) where {T,S<:AbstractArray}
-    start = time()
-    X, Y = myace.X, myace.Y
-    Nx, m_parameter = size(X)
-
-    sIx = Array{Int64}(undef, Nx, m_parameter)
-    bsIx = Array{Int64}(undef, Nx, m_parameter)
-    for i in 1:m_parameter
-        sIx[:, i], bsIx[:, i] = get_sortidx(vec(X[:, i]))
-    end
-    sIy, bsIy = get_sortidx(vec(Y))
-
-    Θ_y = copy(Y)
-    stoch_normalize!(Θ_y, Θ_y)              # AVAS starts from the standardized response
-    Φ_x = copy(X)
-    θ_without_Φ_k = copy(Θ_y)
-
-    conv_err = Vector{Float64}(undef, myace.itermax_outer * myace.itermax_inner)
-    Φ_x_sum = Vector{Float64}(undef, Nx)
-    temp_mean = Vector{Float64}(undef, m_parameter)
-
-    e_old = Inf
-    e_new = ε²(Φ_x, Θ_y)
-    conv_err_idx = 0
-    totalcount = 0
-
-    for _ in 1:myace.itermax_outer
-        for _ in 1:myace.itermax_inner
-            e_old = e_new
-            backfit_sweep!(Φ_x, Θ_y, θ_without_Φ_k, temp_mean, X,
-                           myace.smoother, sIx, bsIx, myace.multiloopversion)
-
-            e_new = ε²(Φ_x, Θ_y)
-            conv_err_idx += 1
-            conv_err[conv_err_idx] = abs(e_old - e_new)
-            totalcount += 1
-
-            abs(e_old - e_new) ≤ myace.errorbound && break
-        end
-
-        # Update Θ_y by the variance-stabilizing transform (this is the only
-        # step that differs from ace_run).
-        variance_stabilize!(Θ_y, Φ_x, Φ_x_sum, myace.smoother)
-
-        e_new = ε²(Φ_x, Θ_y)
-        abs(e_old - e_new) ≤ myace.errorbound && break
-    end
-
-    return ACEres(
-        X=X, Y=Y, Φ_x=Φ_x, Θ_y=Θ_y,
-        sIx=sIx, sIy=sIy, bsIx=bsIx, bsIy=bsIy,
-        conv_err=view(conv_err, 1:conv_err_idx),
-        r_orig=m_parameter == 1 ? [cor(vec(X[:, 1]), vec(Y))] : [cor(vec(X[:, i]), vec(Y)) for i in 1:m_parameter],
-        r²=m_parameter == 1 ? [cor(vec(Φ_x), vec(Θ_y))] : [cor(vec(Φ_x[:, i]), vec(Θ_y)) for i in 1:m_parameter],
-        ρ=ε²(Φ_x, Θ_y),
-        AARD=100.0 / length(X) * sum(abs.(X .- Y) ./ abs.(Y)),
-        t=time() - start,
-        itercount=totalcount,
-        accuracy=myace.errorbound,
-    )
+function avas_run(myace::ACEsim)
+    return avas(myace.X, myace.Y; smoother=myace.smoother,
+                errorbound=myace.errorbound, itermax_inner=myace.itermax_inner,
+                itermax_outer=myace.itermax_outer, multiloopversion=myace.multiloopversion)
 end
