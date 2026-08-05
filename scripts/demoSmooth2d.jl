@@ -2,7 +2,7 @@
 #
 # Run with:  julia --project=. scripts/demoSmooth2d.jl
 # Saves:     output/demosmooth2d_comparison.png
-using ACE
+using AlternatingConditionalExpectations
 using LocalSmoothers
 using Plots
 ENV["GKSwstype"] = "100"  # headless

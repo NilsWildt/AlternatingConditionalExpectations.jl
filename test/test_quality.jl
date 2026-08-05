@@ -1,12 +1,12 @@
-using ACE
+using AlternatingConditionalExpectations
 using Test
 
 @testitem "Aqua quality checks" begin
     using Aqua
-    Aqua.test_all(ACE)
+    Aqua.test_all(AlternatingConditionalExpectations)
 end
 
 @testitem "JET static analysis" begin
     using JET
-    JET.test_package(ACE; target_defined_modules = true)
+    JET.test_package(AlternatingConditionalExpectations; target_defined_modules = true)
 end

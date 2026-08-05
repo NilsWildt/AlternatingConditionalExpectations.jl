@@ -5,7 +5,7 @@
 #
 # Run with:  julia --project=. scripts/demo_koopman.jl
 # Saves:     output/demo_koopman_ace.png
-using ACE
+using AlternatingConditionalExpectations
 using LocalSmoothers
 using Plots
 ENV["GKSwstype"] = "100"  # headless
@@ -22,7 +22,7 @@ smoother = LASb(length(xdot) ÷ 2)
 sim = ACEsim(Matrix(reshape(x, :, 1)), Matrix(reshape(xdot, :, 1)), smoother;
              multiloopversion = :fresh, itermax_inner = 100, itermax_outer = 100,
              errorbound = 1e-5)
-res = ACE.ace_run(sim)
+res = AlternatingConditionalExpectations.ace_run(sim)
 
 @info "Koopman-style ACE result" ρ = res.ρ r² = res.r²[1] iters = res.itercount
 

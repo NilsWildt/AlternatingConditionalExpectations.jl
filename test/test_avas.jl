@@ -1,4 +1,4 @@
-using ACE
+using AlternatingConditionalExpectations
 using Test
 
 @testitem "ctsub trapezoidal integral" begin
@@ -58,8 +58,8 @@ end
 @testitem "AARD guards zero-valued truth" begin
     y = [0.0, 1.0, 2.0, 4.0]
     yhat = [0.1, 1.1, 1.8, 4.2]
-    a = ACE.AARD(y, yhat)
+    a = AlternatingConditionalExpectations.AARD(y, yhat)
     @test isfinite(a)                                   # no Inf from the zero entry
-    @test a ≈ ACE.AARD([1.0, 2.0, 4.0], [1.1, 1.8, 4.2])  # equals AARD over nonzero terms
-    @test isnan(ACE.AARD([0.0, 0.0], [1.0, 2.0]))       # all-zero truth → NaN
+    @test a ≈ AlternatingConditionalExpectations.AARD([1.0, 2.0, 4.0], [1.1, 1.8, 4.2])  # equals AARD over nonzero terms
+    @test isnan(AlternatingConditionalExpectations.AARD([0.0, 0.0], [1.0, 2.0]))       # all-zero truth → NaN
 end

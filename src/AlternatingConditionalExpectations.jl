@@ -1,5 +1,5 @@
 """
-    ACE
+    AlternatingConditionalExpectations
 
 Alternating Conditional Expectations — a Julia implementation of the ACE
 algorithm (Breiman & Friedman, 1985) for nonparametric regression.
@@ -11,13 +11,13 @@ expectation is estimated with a local smoother from
 
 # Example
 ```julia
-using ACE
-X, Y = ACE.generate_bivariate_data(Float64, 200, 0.1, 1.0, 42)
+using AlternatingConditionalExpectations
+X, Y = AlternatingConditionalExpectations.generate_bivariate_data(Float64, 200, 0.1, 1.0, 42)
 res = ace_run(ACEsim(X, Y, LASb(10)))
 plot_ace_results(res; savepath = "ace_result.png")
 ```
 """
-module ACE
+module AlternatingConditionalExpectations
 
 using ConcreteStructs: @concrete
 using DispatchDoctor

@@ -1,8 +1,8 @@
-# ACE.jl
+# AlternatingConditionalExpectations.jl
 
 ![lifecycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)
-[![CI](https://github.com/NilsWildt/ACE.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/NilsWildt/ACE.jl/actions/workflows/CI.yml)
-[![codecov](https://codecov.io/github/NilsWildt/ACE.jl/coverage.svg?branch=master)](https://codecov.io/github/NilsWildt/ACE.jl?branch=master)
+[![CI](https://github.com/NilsWildt/AlternatingConditionalExpectations.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/NilsWildt/AlternatingConditionalExpectations.jl/actions/workflows/CI.yml)
+[![codecov](https://codecov.io/github/NilsWildt/AlternatingConditionalExpectations.jl/coverage.svg?branch=master)](https://codecov.io/github/NilsWildt/AlternatingConditionalExpectations.jl?branch=master)
 
 A Julia implementation of **Alternating Conditional Expectations** (ACE;
 Breiman & Friedman, 1985) for nonparametric regression. ACE estimates optimal
@@ -24,13 +24,13 @@ ACE depends on two unregistered packages, so add them first:
 using Pkg
 Pkg.add(url = "https://github.com/NilsWildt/SimpleKernelregression.jl")
 Pkg.add(url = "https://github.com/NilsWildt/LocalSmoothers.jl")
-Pkg.add(url = "https://github.com/NilsWildt/ACE.jl")
+Pkg.add(url = "https://github.com/NilsWildt/AlternatingConditionalExpectations.jl")
 ```
 
 ## Usage
 
 ```julia
-using ACE
+using AlternatingConditionalExpectations
 
 # 200 samples of a noisy bivariate relationship
 X, Y = generate_bivariate_data(Float64, 200, 0.1, 1.0, 42)
@@ -71,8 +71,8 @@ Per-variable transforms: `Smooth` (default), `Monotone` (isotonic),
 ## Development
 
 ```bash
-git clone https://github.com/NilsWildt/ACE.jl
-cd ACE.jl
+git clone https://github.com/NilsWildt/AlternatingConditionalExpectations.jl
+cd AlternatingConditionalExpectations.jl
 julia --project=. -e 'import Pkg; Pkg.test()'
 ```
 

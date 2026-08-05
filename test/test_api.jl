@@ -1,4 +1,4 @@
-using ACE
+using AlternatingConditionalExpectations
 using Test
 
 @testitem "ace() matches the legacy ace_run" begin

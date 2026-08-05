@@ -1,4 +1,4 @@
-name = "ACE"
+name = "AlternatingConditionalExpectations"
 uuid = "38347678-9dec-11eb-a8b3-0242ac130003"
 authors = ["Nils Wildt <code@nwildt.de>"]
 version = "0.5.0"
