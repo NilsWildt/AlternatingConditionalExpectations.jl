@@ -34,7 +34,7 @@ import LocalSmoothers: Smoother, do_smoothing,
 import SimpleKernelRegression:
     Gaussian, Imq, Mq, Polynomial, Linear, Epanechnikov, Wendland
 
-export ace_run, ACEsim, ACEres, generate_bivariate_data, stoch_normalize, ε²
+export ace_run, avas_run, ctsub, ACEsim, ACEres, generate_bivariate_data, stoch_normalize, ε²
 export plot_ace_results, benchmark_ace_plot
 export BenchmarkFunction, f_b1, f_b2, f_b3, f_b4, f_toy
 export normal_sample, uniform_sample, get_sample
@@ -47,6 +47,7 @@ include("results.jl")
 include("utils.jl")
 include("error_utils.jl")
 include("algorithm.jl")
+include("avas.jl")
 include("benchmarks.jl")
 include("plotting.jl")
 

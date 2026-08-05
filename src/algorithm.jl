@@ -89,6 +89,21 @@ function 𝔼_conditional!(out::AbstractArray{T}, Y::AbstractVector, X::Abstract
     return out
 end
 
+# One backfitting sweep over all predictors:
+# φₖ ← E[θ − Σ_{j≠k} φⱼ | xₖ], each centered to zero mean. Shared by the ACE
+# and AVAS response loops, which differ only in how θ(Y) is updated.
+function backfit_sweep!(Φ_x, Θ_y, θ_without_Φ_k, temp_mean, X, smoother, sIx, bsIx, multiloopversion)
+    multiloopversion == :fresh && (Φ_x .= 0.0)
+    for k in 1:size(X, 2)
+        sum_wo_theta!(θ_without_Φ_k, Θ_y, Φ_x, k)
+        Φ_x[:, k] .= 𝔼_conditional(vec(θ_without_Φ_k), vec(X[:, k]), smoother, sIx[:, k], bsIx[:, k])
+        col_view = view(Φ_x, :, k)
+        temp_mean[k] = sum(col_view) / length(col_view)
+        col_view .-= temp_mean[k]
+    end
+    return Φ_x
+end
+
 """
     ace_run(myace::ACEsim) -> ACEres
 
@@ -124,15 +139,8 @@ the unexplained variance `ε²` stops decreasing (or iteration limits are hit).
     for _ in 1:myace.itermax_outer
         for _ in 1:myace.itermax_inner
             e_old = e_new
-            myace.multiloopversion == :fresh && (Φ_x .= 0.0)
-            for k in 1:m_parameter
-                sum_wo_theta!(θ_without_Φ_k, Θ_y, Φ_x, k)
-                Φ_x[:, k] .= 𝔼_conditional(vec(θ_without_Φ_k), vec(X[:, k]), myace.smoother, sIx[:, k], bsIx[:, k])
-                # center the transformation
-                col_view = view(Φ_x, :, k)
-                temp_mean[k] = sum(col_view) / length(col_view)
-                col_view .-= temp_mean[k]
-            end
+            backfit_sweep!(Φ_x, Θ_y, θ_without_Φ_k, temp_mean, X,
+                           myace.smoother, sIx, bsIx, myace.multiloopversion)
 
             e_new = ε²(Φ_x, Θ_y)
             conv_err_idx += 1
