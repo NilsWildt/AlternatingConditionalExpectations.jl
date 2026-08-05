@@ -23,7 +23,6 @@ using ConcreteStructs: @concrete
 using DispatchDoctor
 using Statistics
 using Random
-using Plots
 using LaTeXStrings
 using StaticArrays
 using PrecompileTools
@@ -57,8 +56,7 @@ include("plotting.jl")
 
 @compile_workload begin
     X, Y = generate_bivariate_data(Float64, 100, 0.1, 1.0, 42)
-    res = ace_run(ACEsim(X, Y, LASb(8)))
-    plot_ace_results(res)
+    ace_run(ACEsim(X, Y, LASb(8)))
 end
 
 end # module

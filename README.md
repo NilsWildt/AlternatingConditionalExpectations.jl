@@ -24,6 +24,26 @@ the relationship (right panel):
 
 ![ACE recovers Φ(X) and Θ(Y), linearizing the relationship](assets/ace_transforms.png)
 
+### ACE as a projection
+
+Geometrically, ACE is a sequence of projections read off the faces of a box
+(axes `X`, `Φ(X)`, `Θ(Y)`): the raw `exp(sin X)` data lives on the front face,
+its conditional-expectation smooth `E[Y | X]` (black) rides on top, the
+predictor transform `Φ(X)` (orange) is laid flat on the floor, an additive
+surface is raised over that floor curve, and the smooth is projected onto it —
+so that on the right face the linearized `Θ(Y)` vs `Φ(X)` line appears. This
+projection reading of the algorithm is due to Clara M. J. J. Roth, with thanks
+for sharing the insight.
+
+![ACE as a projection onto the additive surface](assets/ace_visual_explanation/rotation.gif)
+
+An interactive version — rotate the view and step through the six stages — is
+baked to a self-contained page with
+[MakieBake.jl](https://github.com/JuliaAPlavin/MakieBake.jl):
+[`assets/ace_visual_explanation/index.html`](assets/ace_visual_explanation/index.html)
+(open it directly in a browser, no server required). Regenerate it with
+`julia scripts/ace_visual_explanation.jl` (needs `CairoMakie` and `MakieBake`).
+
 ## Installation
 
 ACE depends on two unregistered packages, so add them first:
@@ -56,7 +76,8 @@ avas(X, Y; smoother = LASb(10))
 # constrain individual variables
 ace(X, Y; smoother = LASb(10), xtransforms = Monotone(LASb(10)))
 
-# dark-theme diagnostic grid + convergence history
+# dark-theme diagnostic grid + convergence history (load any Makie backend first)
+using CairoMakie
 plot_ace_results(model; savepath = "ace_result.png")
 ```
 
@@ -79,8 +100,10 @@ including Friedman's variable-span super smoother (`Supsmu`):
   `LLSSb`, `FRSS`, `Kernelsmooth`, `NWKernelsmooth`, plus the kernel types.
 - **Benchmarks** — `BenchmarkFunction`, `f_b1`…`f_b4`, `f_toy` with samplers.
 - **Error metrics** — `MAE`, `nMAE`, `RMSE`, `UFV`, `pErr`, `AARD`.
-- **Plotting** — a `Plots.jl` recipe for `ACEres` plus `plot_ace_results` and
-  `benchmark_ace_plot`.
+- **Plotting** — Makie-based (load `CairoMakie` or any Makie backend):
+  `plot_ace_results` builds a dark diagnostic grid for an `ACEres`;
+  `benchmark_ace_plot` overlays reference transform curves. Provided via a
+  package extension, so Makie stays opt-in and the core package is light.
 
 ## Development
 
@@ -95,6 +118,48 @@ Runnable demos live in `scripts/` and write PNGs to `output/`:
 ```bash
 julia --project=. scripts/demo2d.jl
 ```
+
+To regenerate the figures embedded in this README (`assets/`), add the plotting
+backend once, then run the generator:
+
+```bash
+julia --project=. -e 'import Pkg; Pkg.add(["CairoMakie", "Makie"])'
+julia --project=. scripts/make_readme_plots.jl
+```
+
+## Related work
+
+This package implements the **ACE** algorithm of Breiman & Friedman (1985) and
+the variance-stabilizing **AVAS** variant of Tibshirani (1988). Both estimate
+nonlinear transformations of the response and predictors so that an additive
+model fits as tightly as possible. They differ in that AVAS additionally
+constrains the response transform to stabilize the residual variance, which
+tends to give more sensible transforms when the signal-to-noise ratio is low —
+the regime where plain ACE is known to misbehave.
+
+The R package **acepack** (Spector, Friedman, Tibshirani, Lumley, Garbett, et
+al.) is a famous and long-standing reference implementation, written in Fortran. Its
+source helped  porting the AVAS variance-stabilization
+step (`ctsub`) and Friedman's variable-span super smoother (`Supsmu`) to Julia,
+and was used to validate their output. A readable introduction to both methods
+is Chapter 16 of Frank Harrell's *Regression Modeling Strategies* (Springer).
+
+### References
+
+- Breiman, L., & Friedman, J. H. (1985). Estimating optimal transformations for
+  multiple regression and correlation. *Journal of the American Statistical
+  Association*, 80(391), 580–598.
+  doi:[10.1080/01621459.1985.10478157](https://doi.org/10.1080/01621459.1985.10478157)
+- Tibshirani, R. (1988). Estimating transformations for regression via
+  additivity and variance stabilization. *Journal of the American Statistical
+  Association*, 83(402), 394–405.
+  doi:[10.1080/01621459.1988.10478610](https://doi.org/10.1080/01621459.1988.10478610)
+- Spector, P., Friedman, J., Tibshirani, R., Lumley, T., Garbett, S., Baron, J.,
+  Klar, B., & Chasalow, S. (2025). *acepack: ACE and AVAS for Selecting Multiple
+  Regression Transformations*. R package version 1.6.3.
+  doi:[10.32614/CRAN.package.acepack](https://doi.org/10.32614/CRAN.package.acepack)
+- Harrell, F. E. (2015). *Regression Modeling Strategies* (2nd ed., Ch. 16).
+  Springer.
 
 ## License
 

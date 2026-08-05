@@ -4,9 +4,8 @@
 # Saves:     output/demo3d_ace.png
 using AlternatingConditionalExpectations
 using LocalSmoothers
-using Plots
+using CairoMakie
 using Random
-ENV["GKSwstype"] = "100"  # headless
 
 outdir = joinpath(@__DIR__, "..", "output")
 mkpath(outdir)

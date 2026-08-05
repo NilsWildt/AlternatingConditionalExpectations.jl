@@ -1,12 +1,11 @@
 # Regenerate the images embedded in the README. Writes PNGs to ../assets/.
-# Run headless: julia --project=. scripts/make_readme_plots.jl
-
-ENV["GKSwstype"] = "100"   # headless GR backend (no display)
+# Run:  julia --project=. scripts/make_readme_plots.jl
+# Requires CairoMakie + Makie in the active environment:
+#   julia --project=. -e 'import Pkg; Pkg.add(["CairoMakie","Makie"])'
 
 using AlternatingConditionalExpectations
-using Plots
+using CairoMakie
 using Random
-gr()
 
 const ASSETS = normpath(joinpath(@__DIR__, "..", "assets"))
 mkpath(ASSETS)
@@ -21,30 +20,37 @@ Yv = exp.(sin.(Xv)) .+ 0.03 .* randn(rng0, n0)
 model = ace(reshape(Xv, n0, 1), reshape(Yv, n0, 1); smoother = LASb(20))
 φ = vec(model.tx)
 θ = vec(model.ty)
-p1 = scatter(Xv, φ; title = "Φ(X): recovered predictor transform",
-             xlabel = "X", ylabel = "Φ(X)", mc = :dodgerblue)
-p2 = scatter(Yv, θ; title = "Θ(Y): recovered response transform",
-             xlabel = "Y", ylabel = "Θ(Y)", mc = :crimson)
-p3 = scatter(φ, θ; title = "Linearized:  Θ(Y) vs Φ(X)   (r² = $(round(model.rsq, digits = 3)))",
-             xlabel = "Φ(X)", ylabel = "Θ(Y)", mc = :seagreen)
-hero = plot(p1, p2, p3; layout = (1, 3), size = (1500, 430), ms = 3, msw = 0,
-            legend = false, framestyle = :box)
-savefig(hero, joinpath(ASSETS, "ace_transforms.png"))
+
+hero = Figure(size = (1500, 430))
+ax1 = Axis(hero[1, 1]; title = "Φ(X): recovered predictor transform",
+           xlabel = "X", ylabel = "Φ(X)")
+scatter!(ax1, Xv, φ; color = :dodgerblue, markersize = 7)
+ax2 = Axis(hero[1, 2]; title = "Θ(Y): recovered response transform",
+           xlabel = "Y", ylabel = "Θ(Y)")
+scatter!(ax2, Yv, θ; color = :crimson, markersize = 7)
+ax3 = Axis(hero[1, 3];
+           title = "Linearized:  Θ(Y) vs Φ(X)   (r² = $(round(model.rsq, digits = 3)))",
+           xlabel = "Φ(X)", ylabel = "Θ(Y)")
+scatter!(ax3, φ, θ; color = :seagreen, markersize = 7)
+save(joinpath(ASSETS, "ace_transforms.png"), hero)
 
 # 2) LocalSmoothers on a noisy signal, including the super smoother.
 rng = MersenneTwister(1)
 x = sort(rand(rng, 400))
 truth = sin.(2π .* x)
 y = truth .+ 0.25 .* randn(rng, 400)
-plt = scatter(x, y; label = "data", ms = 2, mc = :gray70, msw = 0,
-              legend = :topright, size = (1000, 520), framestyle = :box,
-              title = "LocalSmoothers on a noisy signal")
-plot!(plt, x, truth; label = "truth", lw = 2, lc = :black, ls = :dash)
+
+smoothers = Figure(size = (1000, 520))
+ax = Axis(smoothers[1, 1]; title = "LocalSmoothers on a noisy signal",
+          xlabel = "x", ylabel = "y")
+scatter!(ax, x, y; color = :gray70, markersize = 5, label = "data")
+lines!(ax, x, truth; color = :black, linestyle = :dash, linewidth = 2, label = "truth")
 for (sm, lab, col) in ((LASb(40), "LASb(40)", :dodgerblue),
                        (LLSSb(40), "LLSSb(40)", :orange),
                        (Supsmu(), "Supsmu (CV span)", :crimson))
-    plot!(plt, x, do_smoothing(x, y, sm); label = lab, lw = 2.5, lc = col)
+    lines!(ax, x, do_smoothing(x, y, sm); color = col, linewidth = 2.5, label = lab)
 end
-savefig(plt, joinpath(ASSETS, "smoothers.png"))
+axislegend(ax; position = :rt)
+save(joinpath(ASSETS, "smoothers.png"), smoothers)
 
 println("wrote: ", join(readdir(ASSETS), ", "))

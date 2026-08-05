@@ -7,8 +7,7 @@
 # Saves:     output/demo_koopman_ace.png
 using AlternatingConditionalExpectations
 using LocalSmoothers
-using Plots
-ENV["GKSwstype"] = "100"  # headless
+using CairoMakie
 
 outdir = joinpath(@__DIR__, "..", "output")
 mkpath(outdir)
