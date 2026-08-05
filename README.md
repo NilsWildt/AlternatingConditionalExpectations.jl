@@ -24,6 +24,26 @@ the relationship (right panel):
 
 ![ACE recovers Φ(X) and Θ(Y), linearizing the relationship](assets/ace_transforms.png)
 
+### ACE as a projection
+
+Geometrically, ACE is a sequence of projections read off the faces of a box
+(axes `X`, `Φ(X)`, `Θ(Y)`): the raw `exp(sin X)` data lives on the front face,
+its conditional-expectation smooth `E[Y | X]` (black) rides on top, the
+predictor transform `Φ(X)` (orange) is laid flat on the floor, an additive
+surface is raised over that floor curve, and the smooth is projected onto it —
+so that on the right face the linearized `Θ(Y)` vs `Φ(X)` line appears. This
+projection reading of the algorithm is due to Clara M. J. J. Roth, with thanks
+for sharing the insight.
+
+![ACE as a projection onto the additive surface](assets/ace_visual_explanation/rotation.gif)
+
+An interactive version — rotate the view and step through the six stages — is
+baked to a self-contained page with
+[MakieBake.jl](https://github.com/JuliaAPlavin/MakieBake.jl):
+[`assets/ace_visual_explanation/index.html`](assets/ace_visual_explanation/index.html)
+(open it directly in a browser, no server required). Regenerate it with
+`julia scripts/ace_visual_explanation.jl` (needs `CairoMakie` and `MakieBake`).
+
 ## Installation
 
 ACE depends on two unregistered packages, so add them first:
@@ -118,8 +138,8 @@ tends to give more sensible transforms when the signal-to-noise ratio is low —
 the regime where plain ACE is known to misbehave.
 
 The R package **acepack** (Spector, Friedman, Tibshirani, Lumley, Garbett, et
-al.) is the long-standing reference implementation, written in Fortran. Its
-source was an invaluable guide while porting the AVAS variance-stabilization
+al.) is a famous and long-standing reference implementation, written in Fortran. Its
+source helped  porting the AVAS variance-stabilization
 step (`ctsub`) and Friedman's variable-span super smoother (`Supsmu`) to Julia,
 and was used to validate their output. A readable introduction to both methods
 is Chapter 16 of Frank Harrell's *Regression Modeling Strategies* (Springer).
