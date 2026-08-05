@@ -32,7 +32,7 @@ its conditional-expectation smooth `E[Y | X]` (black) rides on top, the
 predictor transform `Φ(X)` (orange) is laid flat on the floor, an additive
 surface is raised over that floor curve, and the smooth is projected onto it —
 so that on the right face the linearized `Θ(Y)` vs `Φ(X)` line appears. This
-projection reading of the algorithm is due to Clara M. J. J. Roth, with thanks
+projection reading of the algorithm is due to Clara MJJ Roth, with thanks
 for sharing the insight.
 
 ![ACE as a projection onto the additive surface](assets/ace_visual_explanation/rotation.gif)
