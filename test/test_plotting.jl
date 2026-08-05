@@ -5,7 +5,7 @@ using Test
     using Plots
     ENV["GKSwstype"] = "100"  # headless GR backend
     X, Y = ACE.generate_bivariate_data(Float64, 150, 0.1, 1.0, 42)
-    res = ACE.run(ACE.ACEsim(X, Y, ACE.LASb(12)))
+    res = ACE.ace_run(ACE.ACEsim(X, Y, ACE.LASb(12)))
     p = plot_ace_results(res)
     @test p isa Plots.Plot
     path = tempname() * ".png"

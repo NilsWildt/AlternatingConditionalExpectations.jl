@@ -13,7 +13,7 @@ mkpath(outdir)
 # Data: Y = exp(X³ + ε)
 X, Y = ACE.generate_bivariate_data(Float64, 500, 0.1, 1.0, 42)
 sim = ACEsim(X, Y, LASb(20))
-res = ACE.run(sim)
+res = ACE.ace_run(sim)
 
 @info "ACE result" ρ = res.ρ r² = res.r²[1] iters = res.itercount t = res.t
 

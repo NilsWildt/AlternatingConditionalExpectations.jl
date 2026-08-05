@@ -13,7 +13,7 @@ expectation is estimated with a local smoother from
 ```julia
 using ACE
 X, Y = ACE.generate_bivariate_data(Float64, 200, 0.1, 1.0, 42)
-res = ACE.run(ACEsim(X, Y, LASb(10)))
+res = ace_run(ACEsim(X, Y, LASb(10)))
 plot_ace_results(res; savepath = "ace_result.png")
 ```
 """
@@ -30,10 +30,11 @@ using PrecompileTools
 
 import LocalSmoothers
 import LocalSmoothers: Smoother, do_smoothing,
-    LAS, LASb, LLSS, LLSSb, FRSS, Kernelsmooth, NWKernelsmooth,
+    LAS, LASb, LLSS, LLSSb, FRSS, Kernelsmooth, NWKernelsmooth
+import SimpleKernelRegression:
     Gaussian, Imq, Mq, Polynomial, Linear, Epanechnikov, Wendland
 
-export run, ACEsim, ACEres, generate_bivariate_data, stoch_normalize, ε²
+export ace_run, ACEsim, ACEres, generate_bivariate_data, stoch_normalize, ε²
 export plot_ace_results, benchmark_ace_plot
 export BenchmarkFunction, f_b1, f_b2, f_b3, f_b4, f_toy
 export normal_sample, uniform_sample, get_sample
@@ -51,7 +52,7 @@ include("plotting.jl")
 
 @compile_workload begin
     X, Y = generate_bivariate_data(Float64, 100, 0.1, 1.0, 42)
-    res = run(ACEsim(X, Y, LASb(8)))
+    res = ace_run(ACEsim(X, Y, LASb(8)))
     plot_ace_results(res)
 end
 

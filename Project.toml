@@ -11,8 +11,17 @@ LocalSmoothers = "1ec2b3c3-d8ca-47a2-a289-c0c0cf2d024c"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SimpleKernelRegression = "47c81bad-6c13-54dd-8d7a-198cdd0ce79a"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+# LocalSmoothers and its own dependency SimpleKernelRegression are unregistered;
+# point Pkg at their git repos so ACE instantiates without manual Pkg.add(url=...).
+# ([sources] is read only from the active project, so the transitive
+# SimpleKernelRegression entry must be repeated here.)
+[sources]
+LocalSmoothers = {url = "https://github.com/NilsWildt/LocalSmoothers.jl", rev = "f12dc1a45de1db66aa42489a9d455f7c73cbf100"}
+SimpleKernelRegression = {url = "https://github.com/NilsWildt/SimpleKernelregression.jl", rev = "216362b49dd126f09db5cff974b3581984ce7e05"}
 
 [compat]
 Aqua = "0.8"
@@ -24,6 +33,7 @@ LocalSmoothers = "0.1"
 Plots = "1"
 PrecompileTools = "1"
 Random = "1"
+SimpleKernelRegression = "0.1"
 StaticArrays = "1"
 Statistics = "1"
 Test = "1"

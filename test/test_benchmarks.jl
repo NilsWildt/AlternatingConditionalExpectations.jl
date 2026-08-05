@@ -29,7 +29,7 @@ end
 
 @testitem "benchmark run end-to-end" begin
     bf = ACE.f_b1(300, 1, "uniform", 1.0, 0.3, true, 42, false)
-    res = ACE.run(ACE.ACEsim(Matrix(bf.X), Matrix(bf.Y), ACE.LASb(20)))
+    res = ACE.ace_run(ACE.ACEsim(Matrix(bf.X), Matrix(bf.Y), ACE.LASb(20)))
     @test all(isfinite, res.Φ_x)
     @test res.ρ < 0.6
 end
@@ -40,7 +40,7 @@ end
         bf = F(200, 1, "uniform", 1.0, 0.3, true, 42, true, (-5.0, 1.4))
         @test all(0 .<= vec(bf.X) .<= 1)
         @test all(0 .<= vec(bf.Y) .<= 1)
-        res = ACE.run(ACE.ACEsim(Matrix(bf.X), Matrix(bf.Y), ACE.LASb(15)))
+        res = ACE.ace_run(ACE.ACEsim(Matrix(bf.X), Matrix(bf.Y), ACE.LASb(15)))
         @test all(isfinite, res.Φ_x)
         @test all(isfinite, res.Θ_y)
     end

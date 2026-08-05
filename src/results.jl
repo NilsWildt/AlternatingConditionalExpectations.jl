@@ -3,7 +3,7 @@
 """
     ACEres
 
-Container returned by [`run`](@ref): the fitted transformations `Φ_x`, `Θ_y`,
+Container returned by [`ace_run`](@ref): the fitted transformations `Φ_x`, `Θ_y`,
 the sort indices, convergence history and diagnostics.
 
 # Fields

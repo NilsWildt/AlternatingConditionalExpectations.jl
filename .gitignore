@@ -19,5 +19,8 @@
 /docs/build
 /docs/Manifest.toml
 /test/coverage/Manifest.toml
-.github
-*.github/workflows/*
+
+# editor / OS / tooling
+.DS_Store
+.omc/
+.vscode/

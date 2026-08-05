@@ -57,7 +57,7 @@ function get_sample(numSamples::Int, numDim::Int, samplingmethod::String, σ::Fl
 end
 
 # Shared fields for all benchmarks: the result arrays (`Φ_x`, `Θ_y`, indices,
-# convergence) are filled in by `ACE.run` or left empty.
+# convergence) are filled in by `ace_run` or left empty.
 
 """
     f_b1(numSamples, numDim, samplingmethod, σ_x, σ_noise, use_seed, seed, scale_data, bounds)

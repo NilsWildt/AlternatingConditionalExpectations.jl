@@ -60,5 +60,14 @@ end
 Average absolute relative deviation (in percent).
 """
 function AARD(Ytrue::AbstractArray, Yestimated::AbstractArray)::Float64
-    return 100.0 ./ length(Ytrue) * sum(abs.(Yestimated .- Ytrue) ./ Ytrue)
+    acc = 0.0
+    n = 0
+    for i in eachindex(Ytrue, Yestimated)
+        yt = Ytrue[i]
+        # Relative deviation is undefined where the truth is zero; skip those terms.
+        iszero(yt) && continue
+        acc += abs(Yestimated[i] - yt) / yt
+        n += 1
+    end
+    return n == 0 ? NaN : 100.0 * acc / n
 end

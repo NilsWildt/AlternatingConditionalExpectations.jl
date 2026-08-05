@@ -90,12 +90,12 @@ function 𝔼_conditional!(out::AbstractArray{T}, Y::AbstractVector, X::Abstract
 end
 
 """
-    run(myace::ACEsim) -> ACEres
+    ace_run(myace::ACEsim) -> ACEres
 
 Run the ACE backfitting algorithm: alternating conditional expectations until
 the unexplained variance `ε²` stops decreasing (or iteration limits are hit).
 """
-@stable function run(myace::ACEsim{T,S}) where {T,S<:AbstractArray}
+@stable function ace_run(myace::ACEsim{T,S}) where {T,S<:AbstractArray}
     start = time()
     X, Y = myace.X, myace.Y
     Nx, m_parameter = size(X)
