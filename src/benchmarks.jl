@@ -74,13 +74,7 @@ mutable struct f_b1 <: BenchmarkFunction
     seed::Int
     scale_data::Bool
     bounds::Tuple{Float64,Float64}
-    X::AbstractArray
-    Y::AbstractArray
-    plot_view_bounds::AbstractArray
-    plot_fcs::AbstractArray
-    name::String
-    scale_factors::AbstractArray
-    Φ_x::AbstractArray
+    name::AbstractString
     Θ_y::AbstractArray
     sIx::AbstractArray
     sIy::AbstractArray
