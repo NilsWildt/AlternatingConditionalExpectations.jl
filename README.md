@@ -56,7 +56,8 @@ avas(X, Y; smoother = LASb(10))
 # constrain individual variables
 ace(X, Y; smoother = LASb(10), xtransforms = Monotone(LASb(10)))
 
-# dark-theme diagnostic grid + convergence history
+# dark-theme diagnostic grid + convergence history (load any Makie backend first)
+using CairoMakie
 plot_ace_results(model; savepath = "ace_result.png")
 ```
 
@@ -79,8 +80,10 @@ including Friedman's variable-span super smoother (`Supsmu`):
   `LLSSb`, `FRSS`, `Kernelsmooth`, `NWKernelsmooth`, plus the kernel types.
 - **Benchmarks** — `BenchmarkFunction`, `f_b1`…`f_b4`, `f_toy` with samplers.
 - **Error metrics** — `MAE`, `nMAE`, `RMSE`, `UFV`, `pErr`, `AARD`.
-- **Plotting** — a `Plots.jl` recipe for `ACEres` plus `plot_ace_results` and
-  `benchmark_ace_plot`.
+- **Plotting** — Makie-based (load `CairoMakie` or any Makie backend):
+  `plot_ace_results` builds a dark diagnostic grid for an `ACEres`;
+  `benchmark_ace_plot` overlays reference transform curves. Provided via a
+  package extension, so Makie stays opt-in and the core package is light.
 
 ## Development
 
@@ -94,6 +97,14 @@ Runnable demos live in `scripts/` and write PNGs to `output/`:
 
 ```bash
 julia --project=. scripts/demo2d.jl
+```
+
+To regenerate the figures embedded in this README (`assets/`), add the plotting
+backend once, then run the generator:
+
+```bash
+julia --project=. -e 'import Pkg; Pkg.add(["CairoMakie", "Makie"])'
+julia --project=. scripts/make_readme_plots.jl
 ```
 
 ## Related work
