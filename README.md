@@ -40,7 +40,7 @@ for sharing the insight.
 An interactive version — rotate the view and step through the six stages — is
 baked to a self-contained page with
 [MakieBake.jl](https://github.com/JuliaAPlavin/MakieBake.jl):
-[`assets/ace_visual_explanation/index.html`](assets/ace_visual_explanation/index.html)
+[`assets/ace_visual_explanation/index.html`](assets/ace_visual_explanation/index.html) -- to view it online, open it [here](https://ace.nwildt.de).
 (open it directly in a browser, no server required). Regenerate it with
 `julia scripts/ace_visual_explanation.jl` (needs `CairoMakie` and `MakieBake`).
 
