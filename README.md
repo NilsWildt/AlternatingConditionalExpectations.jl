@@ -96,6 +96,40 @@ Runnable demos live in `scripts/` and write PNGs to `output/`:
 julia --project=. scripts/demo2d.jl
 ```
 
+## Related work
+
+This package implements the **ACE** algorithm of Breiman & Friedman (1985) and
+the variance-stabilizing **AVAS** variant of Tibshirani (1988). Both estimate
+nonlinear transformations of the response and predictors so that an additive
+model fits as tightly as possible. They differ in that AVAS additionally
+constrains the response transform to stabilize the residual variance, which
+tends to give more sensible transforms when the signal-to-noise ratio is low —
+the regime where plain ACE is known to misbehave.
+
+The R package **acepack** (Spector, Friedman, Tibshirani, Lumley, Garbett, et
+al.) is the long-standing reference implementation, written in Fortran. Its
+source was an invaluable guide while porting the AVAS variance-stabilization
+step (`ctsub`) and Friedman's variable-span super smoother (`Supsmu`) to Julia,
+and was used to validate their output. A readable introduction to both methods
+is Chapter 16 of Frank Harrell's *Regression Modeling Strategies* (Springer).
+
+### References
+
+- Breiman, L., & Friedman, J. H. (1985). Estimating optimal transformations for
+  multiple regression and correlation. *Journal of the American Statistical
+  Association*, 80(391), 580–598.
+  doi:[10.1080/01621459.1985.10478157](https://doi.org/10.1080/01621459.1985.10478157)
+- Tibshirani, R. (1988). Estimating transformations for regression via
+  additivity and variance stabilization. *Journal of the American Statistical
+  Association*, 83(402), 394–405.
+  doi:[10.1080/01621459.1988.10478610](https://doi.org/10.1080/01621459.1988.10478610)
+- Spector, P., Friedman, J., Tibshirani, R., Lumley, T., Garbett, S., Baron, J.,
+  Klar, B., & Chasalow, S. (2025). *acepack: ACE and AVAS for Selecting Multiple
+  Regression Transformations*. R package version 1.6.3.
+  doi:[10.32614/CRAN.package.acepack](https://doi.org/10.32614/CRAN.package.acepack)
+- Harrell, F. E. (2015). *Regression Modeling Strategies* (2nd ed., Ch. 16).
+  Springer.
+
 ## License
 
 MIT — see [LICENSE.md](LICENSE.md).
