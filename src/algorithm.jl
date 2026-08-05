@@ -51,6 +51,7 @@ Standardize `X` in place into `out` (zero mean, unit variance).
 """
 @stable function stoch_normalize!(out::AbstractArray, X::AbstractArray)
     n = length(X)
+    n <= 1 && (@. out = zero(eltype(out)); return out)
     μ = sum(X) / n
     σ = sqrt(sum((x - μ)^2 for x in X) / (n - 1))
     @. out = σ > 0 ? (X - μ) / σ : zero(eltype(out))
