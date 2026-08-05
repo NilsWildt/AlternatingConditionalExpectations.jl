@@ -30,7 +30,7 @@ using PrecompileTools
 
 import LocalSmoothers
 import LocalSmoothers: Smoother, do_smoothing,
-    LAS, LASb, LLSS, LLSSb, FRSS, Kernelsmooth, NWKernelsmooth
+    LAS, LASb, LLSS, LLSSb, FRSS, Supsmu, Kernelsmooth, NWKernelsmooth
 import SimpleKernelRegression:
     Gaussian, Imq, Mq, Polynomial, Linear, Epanechnikov, Wendland
 
@@ -42,7 +42,7 @@ export BenchmarkFunction, f_b1, f_b2, f_b3, f_b4, f_toy
 export normal_sample, uniform_sample, get_sample
 export MAE, nMAE, RMSE, UFV, myErr, pErr, AARD
 # smoother API re-exported for convenience
-export Smoother, do_smoothing, LAS, LASb, LLSS, LLSSb, FRSS, Kernelsmooth, NWKernelsmooth
+export Smoother, do_smoothing, LAS, LASb, LLSS, LLSSb, FRSS, Supsmu, Kernelsmooth, NWKernelsmooth
 export Gaussian, Imq, Mq, Polynomial, Linear, Epanechnikov, Wendland
 
 include("results.jl")

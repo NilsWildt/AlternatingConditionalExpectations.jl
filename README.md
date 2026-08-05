@@ -16,6 +16,14 @@ by an iterative backfitting loop in which each conditional expectation is
 estimated with a local smoother from
 [LocalSmoothers.jl](https://github.com/NilsWildt/LocalSmoothers.jl).
 
+## What it does
+
+Given `Y = exp(sin X)`, ACE recovers the nonlinear predictor transform
+`Φ(X) ≈ sin(X)` and response transform `Θ(Y) ≈ log(Y)` that together linearize
+the relationship (right panel):
+
+![ACE recovers Φ(X) and Θ(Y), linearizing the relationship](assets/ace_transforms.png)
+
 ## Installation
 
 ACE depends on two unregistered packages, so add them first:
@@ -56,6 +64,12 @@ plot_ace_results(model; savepath = "ace_result.png")
 
 Per-variable transforms: `Smooth` (default), `Monotone` (isotonic),
 `LinearFit`, `Categorical`, and `Periodic`.
+
+The conditional expectations are estimated with any
+[LocalSmoothers.jl](https://github.com/NilsWildt/LocalSmoothers.jl) smoother,
+including Friedman's variable-span super smoother (`Supsmu`):
+
+![LocalSmoothers smoothers on a noisy signal](assets/smoothers.png)
 
 ## What's in the package
 

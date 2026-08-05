@@ -53,6 +53,15 @@ end
     @test m.rsq > 0.8
 end
 
+@testitem "ace and avas with the super smoother" begin
+    X, Y = generate_bivariate_data(Float64, 300, 0.1, 1.0, 42)
+    m = ace(X, Y; smoother=Supsmu())
+    @test m isa ACEres && m.converged && m.rsq > 0.9
+    ma = avas(X, Y; smoother=Supsmu())
+    @test ma.rsq > 0.9
+    @test all(isfinite, m.tx) && all(isfinite, ma.ty)
+end
+
 @testitem "FitControls caps iterations" begin
     X, Y = generate_bivariate_data(Float64, 200, 0.1, 1.0, 42)
     m = ace(X, Y; smoother=LASb(15), itermax_outer=1, itermax_inner=1)

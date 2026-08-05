@@ -20,7 +20,7 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 # ([sources] is read only from the active project, so the transitive
 # SimpleKernelRegression entry must be repeated here.)
 [sources]
-LocalSmoothers = {url = "https://github.com/NilsWildt/LocalSmoothers.jl", rev = "f12dc1a45de1db66aa42489a9d455f7c73cbf100"}
+LocalSmoothers = {url = "https://github.com/NilsWildt/LocalSmoothers.jl", rev = "a63cd19fd86d51fc63e45566814b56a05321e0d6"}
 SimpleKernelRegression = {url = "https://github.com/NilsWildt/SimpleKernelregression.jl", rev = "216362b49dd126f09db5cff974b3581984ce7e05"}
 
 [compat]
