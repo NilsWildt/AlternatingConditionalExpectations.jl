@@ -8,5 +8,6 @@ end
 
 @testitem "JET static analysis" begin
     using JET
-    JET.test_package(AlternatingConditionalExpectations; target_defined_modules = true)
+    JET.test_package(AlternatingConditionalExpectations;
+        target_modules=[AlternatingConditionalExpectations])
 end
