@@ -20,7 +20,7 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 # SimpleKernelRegression entry must be repeated here.)
 [sources]
 LocalSmoothers = {url = "https://github.com/NilsWildt/LocalSmoothers.jl", rev = "b5b99afdc5dcecd9aee6f1dd1aa96a18a91a5ede"}
-SimpleKernelRegression = {url = "https://github.com/NilsWildt/SimpleKernelregression.jl", rev = "000cb14740f77826498b30e406baab4b1c707c8c"}
+SimpleKernelRegression = {url = "https://github.com/NilsWildt/SimpleKernelregression.jl", rev = "e53c363acc942f0bae73a1b8256b9774c3f2eaa4"}
 
 # Plotting is optional and lives in a package extension that loads only once a
 # Makie backend (e.g. CairoMakie) is imported, so the core package stays light.
